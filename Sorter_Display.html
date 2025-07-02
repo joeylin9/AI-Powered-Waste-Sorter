@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HuskyLens Sorter Display</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        text-align: center;
+        padding: 20px;
+        transition: background-color 0.5s;
+    }
+    h1 {
+        font-size: 42px;
+        color: #2c3e50;
+    }
+    p {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        color: white;
+        background-color: #3498db;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #2980b9;
+    }
+    .results {
+        width: 80%;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 40px auto 0 auto;
+        padding: 40px;
+        background-color: #c9e1e7;
+        border-radius: 10px;
+        box-sizing: border-box;
+    }
+    h2 {
+        font-size: 32px;
+        color: #2c3e50;
+    }
+    #resultText {
+        color: rgb(222, 165, 154);
+        font-size: 28px;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+    <h1>HuskyLens Classification</h1>
+    <p>This project uses HuskyLens to classify objects, and the classification will show up below!</p>
+    <button onclick="connectToArduino()">Connect to Arduino</button>
+    <div class="results">
+        <h2>Classification:</h2>
+        <p id="resultText">Waiting for Connection</p>
+    </div>
+
+<script>
+    let port;
+    async function connectToArduino() {
+        try {
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 9600 });
+            document.getElementById("resultText").textContent = "Connected! Waiting data...";
+            readSerial();
+        } catch (err) {
+            console.error("Failed to open serial port:", err);
+            document.getElementById("resultText").textContent = "Connection failed";
+        }
+    }
+
+    async function readSerial() {
+        const decoder = new TextDecoder();
+        const reader = port.readable.getReader();
+        let buffer = "";
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value);
+                let lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (let line of lines) {
+                    line = line.trim();
+                    if (line) updateDisplay(line);
+                }
+            }
+        } catch (err) {
+            console.error("Error reading from serial:", err);
+        } finally {
+            reader.releaseLock();
+        }
+    }
+
+    function updateDisplay(id) {
+        let result = "";
+        switch (id) {
+            case "1":
+                result = "Paper";
+                break;
+            case "2":
+                result = "Glass";
+                break;
+            case "3":
+                result = "Plastic";
+                break;
+            case "4":
+                result = "Metal";
+                break;
+            case "5":
+                result = "Textile";
+                break;
+            case "6":
+                result = "E-waste";
+                break;
+            default:
+                result = "Unknown (" + id + ")";
+        }
+        document.getElementById("resultText").textContent = result;
+    }
+</script>
+</body>
+</html>
