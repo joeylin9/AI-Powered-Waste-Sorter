@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AI Waste Sorter</title>
+    <style>
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #2a6f97;
+            padding: 20px;
+        }
+
+        #camera-view {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            border-radius: 12px;
+            transform: scaleX(-1);
+            margin-bottom: 50px;
+        }
+
+        .title-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 6rem;
+            font-weight: 700;
+            margin: 0;
+            color: #2a6f97;
+            letter-spacing: -2px;
+        }
+
+        #byline {
+            font-size: 1.2rem;
+            color: #333;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+
+        .instructions {
+            font-size: 1.1rem;
+            color: #333;
+            text-align: center;
+            max-width: 100%;
+            margin: 30px 0;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bottom-text {
+            font-size: 1rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .result-state h1 {
+            font-size: 5rem;
+            color: #2a6f97;
+            margin-bottom: 20px;
+        }
+
+        .result-state #byline {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <span style="border-radius: 20px;">
+        <video id="camera-view" autoplay muted style="display: none;"></video>
+    </span>
+    
+    <div class="title-container">
+        <h1 id="main-title">AI Waste Sorter</h1>
+        <p id="byline">by Vidacity</p>
+    </div>
+    
+    <p class="instructions" id="instructions">
+        1. Hold your item up to the camera &nbsp;&nbsp; 2. Press the CLASSIFY button &nbsp;&nbsp; 3. Follow the instructions!
+    </p>
+    
+    <p class="bottom-text" id="bottom-text"></p>
+    <button class="classify-button" onclick="classifyWaste()">CLASSIFY</button>
+
+    <script>
+        const video = document.getElementById('camera-view');
+        const placeholder = document.getElementById('camera-placeholder');
+        let classified = false;
+
+        // Start camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { 
+                video.srcObject = stream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+            })
+            .catch(err => {
+                console.error("Camera access error: ", err);
+                // Keep placeholder visible if camera access fails
+                placeholder.textContent = 'Camera not available';
+                placeholder.style.color = '#999';
+            });
+
+        function classifyWaste() {
+            const titleContainer = document.querySelector('.title-container');
+            
+            if (!classified) {
+                // Simulate classification
+                const classes = [
+                    { type: "PLASTIC", instruction: "Make sure the item is clean and place in the blue bin!" },
+                    { type: "METAL", instruction: "Rinse and place in the blue bin!" },
+                    { type: "FOOD WASTE", instruction: "Dispose in the compost bin." },
+                    { type: "STYROFOAM", instruction: "Place in the general trash bin." }
+                ];
+                const result = classes[Math.floor(Math.random() * classes.length)];
+
+                // Change display
+                titleContainer.classList.add('result-state');
+                document.getElementById('main-title').textContent = result.type;
+                document.getElementById('byline').textContent = result.instruction;
+                document.getElementById('instructions').style.display = 'none';
+                document.getElementById('bottom-text').textContent = "Feedback improves AI models!";
+                document.querySelector('.classify-button').textContent = "BACK";
+                classified = true;
+            } else {
+                // Reset to initial state
+                titleContainer.classList.remove('result-state');
+                document.getElementById('main-title').textContent = "AI Waste Sorter";
+                document.getElementById('byline').textContent = "by Vidacity";
+                document.getElementById('instructions').style.display = 'block';
+                document.getElementById('bottom-text').textContent = "";
+                document.querySelector('.classify-button').textContent = "CLASSIFY";
+                classified = false;
+            }
+        }
+    </script>
+</body>
+</html>
