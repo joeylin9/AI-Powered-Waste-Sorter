@@ -28,6 +28,7 @@
         .title-container {
             text-align: center;
             margin-bottom: 3vh;
+            transition: all 0.3s ease;
         }
 
         h1 {
@@ -36,6 +37,7 @@
             margin: 0;
             color: #2a6f97;
             letter-spacing: -0.2vw;
+            transition: all 0.3s ease;
         }
 
         #byline {
@@ -43,6 +45,7 @@
             color: #333;
             margin-top: 1vh;
             font-weight: 400;
+            transition: all 0.3s ease;
         }
 
         .bottom-text {
@@ -53,6 +56,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             margin-top: 8vh;
+            transition: all 0.3s ease;
         }
 
         .result-state h1 {
@@ -66,6 +70,88 @@
             color: #333;
             font-weight: normal;
         }
+
+        .home-content {
+            transition: opacity 0.3s ease;
+        }
+
+        .home-content.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .loading-state.show {
+            opacity: 1;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 2vh;
+        }
+
+        .loading-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2a6f97;
+            animation: loading-pulse 1.4s infinite ease-in-out;
+        }
+
+        .loading-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .loading-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        .loading-dot:nth-child(3) {
+            animation-delay: 0s;
+        }
+
+        @keyframes loading-pulse {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .thinking-text {
+            font-size: 4vw;
+            color: #2a6f97;
+            font-weight: 500;
+            margin-top: 1vh;
+        }
+
+        .back-button {
+            cursor: pointer;
+            margin-top: 5vh;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .back-button.show {
+            opacity: 1;
+            pointer-events: all;
+        }
     </style>
 </head>
 <body>
@@ -73,22 +159,46 @@
         <video id="camera-view" autoplay muted style="display: none;"></video>
     </span>
     
-    <div class="title-container">
-        <h1 id="main-title">AI Waste Sorter</h1>
-        <p id="byline">by Vidacity</p>
+    <div class="home-content" id="home-content">
+        <div class="title-container">
+            <h1 id="main-title">AI Waste Sorter</h1>
+            <p id="byline">by Vidacity</p>
+        </div>
+        
+        <p class="bottom-text" id="bottom-text">
+            1. Hold your item up to the camera &nbsp;&nbsp; 2. Classification will happen automatically!
+        </p>
     </div>
     
-    <p class="bottom-text" id="bottom-text">
-        1. Hold your item up to the camera &nbsp;&nbsp; 2. Press the CLASSIFY button &nbsp;&nbsp; 3. Follow the instructions!
-    </p>
-    <button class="classify-button" onclick="classifyWaste()">CLASSIFY</button>
+    <div class="loading-state" id="loading-state">
+        <div class="thinking-text">Thinking</div>
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+    </div>
+
+    <button class="back-button" id="back-button" onclick="goBackToHome()">Back</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script>
         const video = document.getElementById('camera-view');
-        const placeholder = document.getElementById('camera-placeholder');
+        const titleContainer = document.querySelector('.title-container');
+        const homeContent = document.getElementById('home-content');
+        const loadingState = document.getElementById('loading-state');
+        const backButton = document.getElementById('back-button');
+        
         let classified = false;
+        let isThinking = false;
+        let classificationTimeout = null;
+        let resetTimeout = null;
+        
+        // Stability timer variables
+        let stabilityTimer = null;
+        let stabilityStartTime = null;
+        let lastStablePrediction = null;
         
         // Teachable Machine model URL
         const modelURL = "./my_model/";
@@ -126,9 +236,6 @@
                 .then(stream => { 
                     video.srcObject = stream;
                     video.style.display = 'block';
-                    if (placeholder) {
-                        placeholder.style.display = 'none';
-                    }
                     
                     // Start prediction loop once camera is ready
                     video.onloadeddata = () => {
@@ -138,10 +245,7 @@
                 })
                 .catch(err => {
                     console.error("Camera access error: ", err);
-                    if (placeholder) {
-                        placeholder.textContent = 'Camera not available';
-                        placeholder.style.color = '#999';
-                    }
+                    document.getElementById('bottom-text').textContent = 'Camera not available';
                 });
         }
 
@@ -160,9 +264,68 @@
                         }
                     }
                     
-                    // Only update if confidence is above threshold
-                    if (highestPrediction.probability > 0.70) {
+                    // Check if we have a non-background detection with high confidence (80%)
+                    if (highestPrediction.probability > 0.80 && 
+                        highestPrediction.className.toLowerCase() !== 'background' &&
+                        highestPrediction.className.toLowerCase() !== 'nothing') {
+                        
                         currentPrediction = highestPrediction;
+                        
+                        // Clear any existing reset timeout
+                        if (resetTimeout) {
+                            clearTimeout(resetTimeout);
+                            resetTimeout = null;
+                        }
+                        
+                        // If not already classified and not thinking
+                        if (!classified && !isThinking) {
+                            // Start or continue stability timer
+                            if (!stabilityTimer) {
+                                // Start new stability timer
+                                stabilityStartTime = Date.now();
+                                lastStablePrediction = highestPrediction;
+                                
+                                stabilityTimer = setTimeout(() => {
+                                    // After 0.5 seconds of stable detection, start thinking
+                                    if (lastStablePrediction && !classified && !isThinking) {
+                                        showThinkingState();
+                                        classificationTimeout = setTimeout(() => {
+                                            classifyWaste();
+                                            classificationTimeout = null;
+                                        }, 2000); // 2 seconds to show thinking animation
+                                    }
+                                    stabilityTimer = null;
+                                    stabilityStartTime = null;
+                                    lastStablePrediction = null;
+                                }, 500); // .5 second stability requirement
+                            } else {
+                                // Update the stable prediction (timer is already running)
+                                lastStablePrediction = highestPrediction;
+                            }
+                        }
+                        
+                    } else {
+                        // Background or low confidence detection
+                        currentPrediction = null;
+                        
+                        // Clear stability timer if running
+                        if (stabilityTimer) {
+                            clearTimeout(stabilityTimer);
+                            stabilityTimer = null;
+                            stabilityStartTime = null;
+                            lastStablePrediction = null;
+                        }
+                        
+                        // Clear classification timeout if pending
+                        if (classificationTimeout) {
+                            clearTimeout(classificationTimeout);
+                            classificationTimeout = null;
+                        }
+                        
+                        // Hide thinking state if showing
+                        if (isThinking) {
+                            hideThinkingState();
+                        }
                     }
                     
                 } catch (error) {
@@ -174,54 +337,102 @@
             window.requestAnimationFrame(predictionLoop);
         }
 
-        function classifyWaste() {
-            const titleContainer = document.querySelector('.title-container');
+        function showThinkingState() {
+            if (isThinking) return;
             
-            if (!classified) {
-                // Use the machine learning model prediction if available
-                if (modelLoaded && currentPrediction && currentPrediction.probability > 0.70) {
-                    let type = currentPrediction.className.toUpperCase();
-                    let instruction = "";
-                    
-                    // Set the appropriate instruction based on the waste type
-                    switch (type) {
-                        case "METAL":
-                            instruction = "Rinse and place in the blue bin!";
-                            break;
-                        case "PAPER":
-                            instruction = "Make sure the item is clean and place in the blue bin!";
-                            break;
-                        default:
-                            // For any other classes that might be added later
-                            instruction = "Make sure the item is clean and place in the appropriate recycling bin!";
-                    }
-                    
-                    var result = { type, instruction };
-                } else {
-                    // Fallback if no good prediction is available
-                    const fallbackClasses = [
-                        { type: "METAL", instruction: "Rinse and place in the blue bin!" },
-                        { type: "PAPER", instruction: "Make sure the item is clean and place in the blue bin!" }
-                    ];
-                    var result = fallbackClasses[Math.floor(Math.random() * fallbackClasses.length)];
-                }
+            isThinking = true;
+            homeContent.classList.add('hide');
+            loadingState.classList.add('show');
+        }
 
-                // Change display
-                titleContainer.classList.add('result-state');
-                document.getElementById('main-title').textContent = result.type;
-                document.getElementById('byline').textContent = result.instruction;
-                document.getElementById('bottom-text').textContent = "Check that your item is not a special case!";
-                document.querySelector('.classify-button').textContent = "BACK";
-                classified = true;
-            } else {
-                // Reset to initial state
-                titleContainer.classList.remove('result-state');
-                document.getElementById('main-title').textContent = "AI Waste Sorter";
-                document.getElementById('byline').textContent = "by Vidacity";
-                document.getElementById('bottom-text').innerHTML = '1. Hold your item up to the camera &nbsp;&nbsp; 2. Press the CLASSIFY button &nbsp;&nbsp; 3. Follow the instructions!';
-                document.querySelector('.classify-button').textContent = "CLASSIFY";
-                classified = false;
+        function hideThinkingState() {
+            if (!isThinking) return;
+            
+            isThinking = false;
+            homeContent.classList.remove('hide');
+            loadingState.classList.remove('show');
+        }
+
+        function classifyWaste() {
+            if (classified || !currentPrediction) return;
+            
+            // Hide thinking state
+            hideThinkingState();
+            
+            let type = currentPrediction.className.toUpperCase();
+            let instruction = "";
+            
+            // Set the appropriate instruction based on the waste type
+            switch (type) {
+                case "METAL":
+                    instruction = "Make sure the item is clean and place in the blue bin!";
+                    break;
+                case "PAPER":
+                    instruction = "Place in the blue bin!";
+                    break;
+                case "PLASTIC":
+                    instruction = "Make sure the item is clean and place in the blue bin!";
+                    break;
+                case "GLASS":
+                    instruction = "Make sure the item is clean and place in the blue bin!";
+                    break;
+                case "CLOTHING":
+                    instruction = "Donate if in good condition, otherwise place in the waste bin!";
+                    break;
+                case "TEXTILE":
+                    instruction = "Donate if in good condition, otherwise place in the waste bin!";
+                    break;
+                case "E-WASTE":
+                    instruction = "Place in the e-waste bin!";
+                    break;
+                case "FOOD WASTE":
+                    instruction = "Place in the compost bin!";
+                    break;
+                default:
+                    instruction = "Please try again!";
             }
+
+            // Change display to result state
+            titleContainer.classList.add('result-state');
+            document.getElementById('main-title').textContent = type;
+            document.getElementById('byline').textContent = instruction;
+            document.getElementById('bottom-text').textContent = "Check that your item is not a special case!";
+            backButton.classList.add('show');
+            classified = true;
+        }
+
+        function goBackToHome() {
+            resetToHomeScreen();
+        }
+
+        function resetToHomeScreen() {
+            if (!classified) return;
+            
+            // Clear all timers
+            if (stabilityTimer) {
+                clearTimeout(stabilityTimer);
+                stabilityTimer = null;
+                stabilityStartTime = null;
+                lastStablePrediction = null;
+            }
+            
+            if (classificationTimeout) {
+                clearTimeout(classificationTimeout);
+                classificationTimeout = null;
+            }
+            
+            // Make sure thinking state is hidden
+            hideThinkingState();
+            
+            // Hide back button
+            backButton.classList.remove('show');
+            
+            // Reset to initial state
+            titleContainer.classList.remove('result-state');
+            document.getElementById('main-title').textContent = "AI Waste Sorter";
+            document.getElementById('byline').textContent = "by Vidacity";
+            document.getElementById('bottom-text').innerHTML = '1. Hold your item up to the camera &nbsp;&nbsp; 2. Classification will happen automatically!';
+            classified = false;
         }
     </script>
 </body>
