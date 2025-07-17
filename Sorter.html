@@ -54,7 +54,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-top: 22vh;
+            margin-top: 20vh;
             transition: all 0.3s ease;
         }
 
@@ -74,6 +74,7 @@
             font-size: 1.4vw;
             color: #333;
             font-weight: normal;
+            max-width: 45vw;
         }
 
         .home-content {
@@ -502,7 +503,14 @@
             // Check if input is a number between 1-8
             const numericInput = parseInt(inputValue);
             if (isNaN(numericInput) || numericInput < 1 || numericInput > 8) {
-                alert('Please enter a number between 1 and 8.');
+                correctionInput.classList.add('input-error');
+                correctionInput.value = '';
+                correctionInput.placeholder = 'Enter a number 1-8!';
+                correctionInput.focus();
+                setTimeout(() => {
+                    correctionInput.classList.remove('input-error');
+                    correctionInput.placeholder = '---';
+                }, 3000);
                 return;
             }
             
@@ -530,39 +538,38 @@
                 clearTimeout(autoReturnTimer);
             }
 
-            // Set timer to automatically return to home after 10 seconds
             autoReturnTimer = setTimeout(() => {
                 resetToHomeScreen();
                 autoReturnTimer = null;
-            }, 10000);
+            }, 20000);
     
             let instruction = "";
             
             // Set the appropriate instruction based on the waste type
             switch (type) {
                 case "METAL":
-                    instruction = "Make sure the item is clean and place in the blue bin";
+                    instruction = "Take a slight right and move forward to the bin for metals. Make sure the item is clean and place in the bin";
                     break;
                 case "PAPER":
-                    instruction = "Place in the blue bin";
+                    instruction = "Turn left towards the Community Workshop and place in the blue bin";
                     break;
                 case "PLASTIC":
-                    instruction = "Make sure the item is clean and place in the blue bin";
+                    instruction = "Take a slight right and move forward to the bin for plastics. Make sure the item is clean and place in the bin";
                     break;
                 case "GLASS":
-                    instruction = "Make sure the item is clean and place in the blue bin";
+                    instruction = "Take a slight right and move forward to the bin for glass. Make sure the item is clean and place in the bin";
                     break;
                 case "CLOTHING":
-                    instruction = "Donate if in good condition, otherwise place in the waste bin";
+                    instruction = "If in good condition, turn around and move forward to the clothing donation bin. Otherwise place in the waste bin";
                     break;
                 case "TEXTILE":
-                    instruction = "Donate if in good condition, otherwise place in the waste bin";
+                    instruction = "If in good condition, turn around and move forward to the textile donation bin. Otherwise place in the waste bin";
                     break;
                 case "E-WASTE":
-                    instruction = "Place in the e-waste bin";
+                    instruction = "Go up to the second floor, turn left to the e-waste bin and place in the bin";
                     break;
                 case "FOOD WASTE":
-                    instruction = "Place in the compost bin";
+                    instruction = "Turn around towards the tray return area and place in the compost bin";
                     break;
                 default:
                     instruction = "Please check with local waste management for proper disposal";
