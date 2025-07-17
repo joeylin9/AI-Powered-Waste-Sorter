@@ -31,7 +31,7 @@
         }
 
         h1 {
-            font-size: 8vw;
+            font-size: 10vw;
             font-weight: 700;
             margin: 0;
             color: #2a6f97;
@@ -181,7 +181,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             position: absolute;
-            top: 50%;
+            top: 60%;
             left: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
@@ -196,6 +196,7 @@
             padding: 1vh 2vw;
             font-size: 1.5vw;
             border-radius: 1vw;
+            border: black 1px solid;
             margin: 2vh 0;
             width: 20vw;
             text-align: center;
@@ -204,11 +205,11 @@
 
         .submit-button {
             cursor: pointer;
-            font-size: 1.2vw;
-            padding: 1vh 2vw;
-            border: 1px solid black;
+            font-size: 1vw;
+            padding: 0.5vh 1vw;
             border-radius: 1vw;
             background-color: white;
+            border: black 1px solid;
         }
 
         .correction-title {
@@ -222,6 +223,26 @@
             font-size: 1.2vw;
             color: #666;
             margin-bottom: 2vh;
+        }
+
+        .waste-type-list {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 1vw;
+            margin-bottom: 1vh;
+            text-align: left;
+            font-size: 1vw;
+        }
+
+        .waste-type-item {
+            padding: 0.5vh 1vw;
+            border-radius: 0.5vw;
+            background-color: #f0f2f5;
+        }
+
+        .waste-type-number {
+            font-weight: bold;
+            color: #2a6f97;
         }
     </style>
 </head>
@@ -252,14 +273,24 @@
 
     <div class="correction-state" id="correction-state">
         <div class="correction-title">What is the correct classification?</div>
-        <div class="correction-subtitle">Please enter the correct waste type:</div>
-        <input type="text" class="correction-input" id="correction-input"/>
+        <div class="correction-subtitle">Please enter the number corresponding to the waste type:</div>
+        <div class="waste-type-list">
+            <div class="waste-type-item"><span class="waste-type-number">1.</span> METAL</div>
+            <div class="waste-type-item"><span class="waste-type-number">2.</span> PAPER</div>
+            <div class="waste-type-item"><span class="waste-type-number">3.</span> PLASTIC</div>
+            <div class="waste-type-item"><span class="waste-type-number">4.</span> GLASS</div>
+            <div class="waste-type-item"><span class="waste-type-number">5.</span> CLOTHING</div>
+            <div class="waste-type-item"><span class="waste-type-number">6.</span> TEXTILE</div>
+            <div class="waste-type-item"><span class="waste-type-number">7.</span> E-WASTE</div>
+            <div class="waste-type-item"><span class="waste-type-number">8.</span> FOOD WASTE</div>
+        </div>
+        <input type="text" class="correction-input" id="correction-input" placeholder="---"/>
         <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit</button>
     </div>
 
     <div class="button-container">
-        <button class="back-button" id="back-button" onclick="resetToHomeScreen()">Back</button>
-        <button class="wrong-button" id="wrong-button" onclick="showCorrectionState()">Wrong classification?</button>
+        <button class="back-button" id="back-button" onclick="resetToHomeScreen()">Home</button>
+        <button class="wrong-button" id="wrong-button" onclick="showCorrectionState()">Wrong Classification?</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -444,6 +475,15 @@
         }
 
         function showCorrectionState() {
+            if (autoReturnTimer) {
+                clearTimeout(autoReturnTimer);
+            }
+
+            autoReturnTimer = setTimeout(() => {
+                resetToHomeScreen();
+                autoReturnTimer = null;
+            }, 30000);
+
             homeContent.classList.add('hide');
             correctionState.classList.add('show');
             correctionInput.value = '';
@@ -456,13 +496,19 @@
         }
 
         function submitCorrection() {
-            const correctedType = correctionInput.value.trim().toUpperCase();
+            const inputValue = correctionInput.value.trim();
+            const wasteTypes = ["METAL", "PAPER", "PLASTIC", "GLASS", "CLOTHING", "TEXTILE", "E-WASTE", "FOOD WASTE"];
             
-            if (!["METAL", "PAPER", "PLASTIC", "GLASS", "CLOTHING", "TEXTILE", "E-WASTE", "FOOD WASTE"].includes(correctedType)) {
-                alert('Please enter a valid waste type.');
+            // Check if input is a number between 1-8
+            const numericInput = parseInt(inputValue);
+            if (isNaN(numericInput) || numericInput < 1 || numericInput > 8) {
+                alert('Please enter a number between 1 and 8.');
                 return;
             }
-
+            
+            // Convert number to waste type (array is 0-indexed, input is 1-indexed)
+            const correctedType = wasteTypes[numericInput - 1];
+            
             hideCorrectionState();
             classifyWaste(correctedType);
         }
@@ -474,23 +520,21 @@
             }
         });
 
-        // Variable to store auto-return timer
         let autoReturnTimer = null;
         
         function classifyWaste(type) {
             backButton.classList.add('show');
             wrongButton.classList.add('show');
-            
-            // Clear any existing auto-return timer
+        
             if (autoReturnTimer) {
                 clearTimeout(autoReturnTimer);
             }
-            
+
             // Set timer to automatically return to home after 10 seconds
             autoReturnTimer = setTimeout(() => {
                 resetToHomeScreen();
                 autoReturnTimer = null;
-            }, 10000); // 10 seconds
+            }, 10000);
     
             let instruction = "";
             
