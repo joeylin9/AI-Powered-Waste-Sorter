@@ -12,8 +12,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
+            max-height: 100vh;
             padding: 2vh;
         }
 
@@ -55,18 +54,24 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-top: 8vh;
+            margin-top: 22vh;
             transition: all 0.3s ease;
         }
 
         .result-state h1 {
-            font-size: 6vw;
+            font-size: 7vw;
             color: #2a6f97;
             margin-bottom: 2vh;
         }
 
+        .feedback-state #byline {
+            font-size: 2vw;
+            color: #333;
+            font-weight: normal;
+        }
+
         .result-state #byline {
-            font-size: 1.5vw;
+            font-size: 1.4vw;
             color: #333;
             font-weight: normal;
         }
@@ -134,23 +139,89 @@
         }
 
         .thinking-text {
-            font-size: 4vw;
+            font-size: 5vw;
             color: #2a6f97;
             font-weight: 500;
             margin-top: 1vh;
         }
-
-        .back-button {
+        
+        .back-button, .wrong-button {
             cursor: pointer;
-            margin-top: 5vh;
-            transition: all 0.3s ease;
             opacity: 0;
+            pointer-events: none;
+            font-size: 1.5vw;
+            padding: 1vh 2vw;
+            border: 1px solid #2a6f97;
+            border-radius: 1vw;
+            background: white;
+            color: #2a6f97;
+            margin: 0px 1vw;
+        }
+
+        .back-button.show, .wrong-button.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .back-button:hover, .wrong-button:hover {
+            background: #f4f4f4;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 3vh;
+        }
+
+        .correction-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             pointer-events: none;
         }
 
-        .back-button.show {
+        .correction-state.show {
             opacity: 1;
             pointer-events: all;
+        }
+
+        .correction-input {
+            padding: 1vh 2vw;
+            font-size: 1.5vw;
+            border-radius: 1vw;
+            margin: 2vh 0;
+            width: 20vw;
+            text-align: center;
+            outline: none;
+        }
+
+        .submit-button {
+            cursor: pointer;
+            font-size: 1.2vw;
+            padding: 1vh 2vw;
+            border: 1px solid black;
+            border-radius: 1vw;
+            background-color: white;
+        }
+
+        .correction-title {
+            font-size: 3vw;
+            color: #2a6f97;
+            font-weight: 500;
+            margin-bottom: 1vh;
+        }
+
+        .correction-subtitle {
+            font-size: 1.2vw;
+            color: #666;
+            margin-bottom: 2vh;
         }
     </style>
 </head>
@@ -166,7 +237,7 @@
         </div>
         
         <p class="bottom-text" id="bottom-text">
-            1. Hold your item up to the camera &nbsp;&nbsp; 2. Classification will happen automatically!
+            1. Hold your item up to the camera &nbsp;&nbsp; 2. Wait for classifiction &nbsp;&nbsp; 3. Follow the instructions!
         </p>
     </div>
     
@@ -179,7 +250,17 @@
         </div>
     </div>
 
-    <button class="back-button" id="back-button" onclick="goBackToHome()">Back</button>
+    <div class="correction-state" id="correction-state">
+        <div class="correction-title">What is the correct classification?</div>
+        <div class="correction-subtitle">Please enter the correct waste type:</div>
+        <input type="text" class="correction-input" id="correction-input"/>
+        <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit</button>
+    </div>
+
+    <div class="button-container">
+        <button class="back-button" id="back-button" onclick="resetToHomeScreen()">Back</button>
+        <button class="wrong-button" id="wrong-button" onclick="showCorrectionState()">Wrong classification?</button>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
@@ -188,7 +269,11 @@
         const titleContainer = document.querySelector('.title-container');
         const homeContent = document.getElementById('home-content');
         const loadingState = document.getElementById('loading-state');
+        const correctionState = document.getElementById('correction-state');
+        const correctionInput = document.getElementById('correction-input');
         const backButton = document.getElementById('back-button');
+        const wrongButton = document.getElementById('wrong-button');
+        let type = "";
         
         let classified = false;
         let isThinking = false;
@@ -264,8 +349,7 @@
                         }
                     }
                     
-                    // Check if we have a non-background detection with high confidence (80%)
-                    if (highestPrediction.probability > 0.80 && 
+                    if (highestPrediction.probability > 0.70 && 
                         highestPrediction.className.toLowerCase() !== 'background' &&
                         highestPrediction.className.toLowerCase() !== 'nothing') {
                         
@@ -290,7 +374,8 @@
                                     if (lastStablePrediction && !classified && !isThinking) {
                                         showThinkingState();
                                         classificationTimeout = setTimeout(() => {
-                                            classifyWaste();
+                                            hideThinkingState();
+                                            showResultState();
                                             classificationTimeout = null;
                                         }, 2000); // 2 seconds to show thinking animation
                                     }
@@ -353,43 +438,90 @@
             loadingState.classList.remove('show');
         }
 
-        function classifyWaste() {
-            if (classified || !currentPrediction) return;
+        function showResultState() {
+            type = currentPrediction.className.toUpperCase();
+            classifyWaste(type);
+        }
+
+        function showCorrectionState() {
+            homeContent.classList.add('hide');
+            correctionState.classList.add('show');
+            correctionInput.value = '';
+            correctionInput.focus();
+        }
+
+        function hideCorrectionState() {
+            correctionState.classList.remove('show');
+            homeContent.classList.remove('hide');
+        }
+
+        function submitCorrection() {
+            const correctedType = correctionInput.value.trim().toUpperCase();
             
-            // Hide thinking state
-            hideThinkingState();
+            if (!["METAL", "PAPER", "PLASTIC", "GLASS", "CLOTHING", "TEXTILE", "E-WASTE", "FOOD WASTE"].includes(correctedType)) {
+                alert('Please enter a valid waste type.');
+                return;
+            }
+
+            hideCorrectionState();
+            classifyWaste(correctedType);
+        }
+
+        // Add Enter key support for correction input
+        document.getElementById('correction-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitCorrection();
+            }
+        });
+
+        // Variable to store auto-return timer
+        let autoReturnTimer = null;
+        
+        function classifyWaste(type) {
+            backButton.classList.add('show');
+            wrongButton.classList.add('show');
             
-            let type = currentPrediction.className.toUpperCase();
+            // Clear any existing auto-return timer
+            if (autoReturnTimer) {
+                clearTimeout(autoReturnTimer);
+            }
+            
+            // Set timer to automatically return to home after 10 seconds
+            autoReturnTimer = setTimeout(() => {
+                resetToHomeScreen();
+                autoReturnTimer = null;
+            }, 10000); // 10 seconds
+    
             let instruction = "";
             
             // Set the appropriate instruction based on the waste type
             switch (type) {
                 case "METAL":
-                    instruction = "Make sure the item is clean and place in the blue bin!";
+                    instruction = "Make sure the item is clean and place in the blue bin";
                     break;
                 case "PAPER":
-                    instruction = "Place in the blue bin!";
+                    instruction = "Place in the blue bin";
                     break;
                 case "PLASTIC":
-                    instruction = "Make sure the item is clean and place in the blue bin!";
+                    instruction = "Make sure the item is clean and place in the blue bin";
                     break;
                 case "GLASS":
-                    instruction = "Make sure the item is clean and place in the blue bin!";
+                    instruction = "Make sure the item is clean and place in the blue bin";
                     break;
                 case "CLOTHING":
-                    instruction = "Donate if in good condition, otherwise place in the waste bin!";
+                    instruction = "Donate if in good condition, otherwise place in the waste bin";
                     break;
                 case "TEXTILE":
-                    instruction = "Donate if in good condition, otherwise place in the waste bin!";
+                    instruction = "Donate if in good condition, otherwise place in the waste bin";
                     break;
                 case "E-WASTE":
-                    instruction = "Place in the e-waste bin!";
+                    instruction = "Place in the e-waste bin";
                     break;
                 case "FOOD WASTE":
-                    instruction = "Place in the compost bin!";
+                    instruction = "Place in the compost bin";
                     break;
                 default:
-                    instruction = "Please try again!";
+                    instruction = "Please check with local waste management for proper disposal";
             }
 
             // Change display to result state
@@ -397,12 +529,7 @@
             document.getElementById('main-title').textContent = type;
             document.getElementById('byline').textContent = instruction;
             document.getElementById('bottom-text').textContent = "Check that your item is not a special case!";
-            backButton.classList.add('show');
             classified = true;
-        }
-
-        function goBackToHome() {
-            resetToHomeScreen();
         }
 
         function resetToHomeScreen() {
@@ -421,17 +548,24 @@
                 classificationTimeout = null;
             }
             
-            // Make sure thinking state is hidden
-            hideThinkingState();
+            // Clear auto-return timer if it exists
+            if (autoReturnTimer) {
+                clearTimeout(autoReturnTimer);
+                autoReturnTimer = null;
+            }
             
-            // Hide back button
+            // Hide all states
+            hideCorrectionState();
+            
+            // Hide buttons
             backButton.classList.remove('show');
+            wrongButton.classList.remove('show');
             
             // Reset to initial state
             titleContainer.classList.remove('result-state');
             document.getElementById('main-title').textContent = "AI Waste Sorter";
             document.getElementById('byline').textContent = "by Vidacity";
-            document.getElementById('bottom-text').innerHTML = '1. Hold your item up to the camera &nbsp;&nbsp; 2. Classification will happen automatically!';
+            document.getElementById('bottom-text').innerHTML = '1. Hold your item up to the camera &nbsp;&nbsp; 2. Wait for classifiction &nbsp;&nbsp; 3. Follow the instructions!';
             classified = false;
         }
     </script>
