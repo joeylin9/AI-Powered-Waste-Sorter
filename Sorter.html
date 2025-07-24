@@ -76,6 +76,30 @@
             font-weight: normal;
             max-width: 45vw;
         }
+        
+        .confidence-display {
+            font-size: 1.2vw;
+            margin-top: 1vh;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confidence-bar {
+            width: 15vw;
+            height: 1vh;
+            background-color: #e0e0e0;
+            border-radius: 0.5vh;
+            margin: 0 1vw;
+            overflow: hidden;
+        }
+        
+        .confidence-level {
+            height: 100%;
+            background-color: #2a6f97;
+            border-radius: 0.5vh;
+        }
 
         .home-content {
             transition: opacity 0.3s ease;
@@ -181,11 +205,19 @@
             align-items: center;
             opacity: 0;
             transition: opacity 0.3s ease;
-            position: absolute;
-            top: 60%;
+            position: fixed;
+            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
+            width: 90vw;
+            max-width: 1200px;
+            background: white;
+            border-radius: 2vw;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 3vh 2vw;
+            max-height: 85vh;
+            overflow-y: auto;
         }
 
         .correction-state.show {
@@ -195,61 +227,119 @@
 
         .correction-input {
             padding: 1vh 2vw;
-            font-size: 1.5vw;
+            font-size: 1.2vw;
             border-radius: 1vw;
-            border: black 1px solid;
+            border: 2px solid #2a6f97;
             margin: 2vh 0;
-            width: 20vw;
+            width: 15vw;
             text-align: center;
             outline: none;
         }
 
+        .correction-input:focus {
+            border-color: #1a4f6f;
+            box-shadow: 0 0 10px rgba(42, 111, 151, 0.3);
+        }
+
         .submit-button {
             cursor: pointer;
-            font-size: 1vw;
-            padding: 0.5vh 1vw;
+            font-size: 1.2vw;
+            padding: 1vh 2vw;
             border-radius: 1vw;
-            background-color: white;
-            border: black 1px solid;
+            background-color: #2a6f97;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #1a4f6f;
         }
 
         .correction-title {
-            font-size: 3vw;
+            font-size: 2.5vw;
             color: #2a6f97;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 1vh;
+            text-align: center;
         }
 
         .correction-subtitle {
-            font-size: 1.2vw;
+            font-size: 1.1vw;
             color: #666;
-            margin-bottom: 2vh;
+            margin-bottom: 3vh;
+            text-align: center;
+        }
+
+        .categories-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2vw;
+            width: 100%;
+            margin-bottom: 3vh;
+        }
+
+        .category-section {
+            background: #f8f9fa;
+            border-radius: 1vw;
+            padding: 1.5vh 1vw;
+            border: 2px solid #e9ecef;
+        }
+
+        .waste-category {
+            font-weight: bold;
+            color: #2a6f97;
+            font-size: 1.1vw;
+            margin-bottom: 1vh;
+            text-align: center;
+            background: #2a6f97;
+            color: white;
+            padding: 0.5vh 1vw;
+            border-radius: 0.5vw;
         }
 
         .waste-type-list {
-            display: grid;
-            grid-template-columns: auto auto;
-            gap: 1vw;
-            margin-bottom: 1vh;
-            text-align: left;
-            font-size: 1vw;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3vh;
         }
 
         .waste-type-item {
-            padding: 0.5vh 1vw;
+            padding: 0.4vh 1vw;
             border-radius: 0.5vw;
-            background-color: #f0f2f5;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            font-size: 0.9vw;
+            transition: background-color 0.2s ease;
+        }
+
+        .waste-type-item:hover {
+            background-color: #e3f2fd;
         }
 
         .waste-type-number {
             font-weight: bold;
             color: #2a6f97;
+            margin-right: 0.5vw;
+            display: inline-block;
+            width: 2vw;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2vh;
+            padding-top: 2vh;
+            border-top: 2px solid #e9ecef;
         }
     </style>
 </head>
 <body>
-    <span style="border-radius: 2vw;">
+
+    <span style="border-radius: 2vw; display: flex; flex-direction: column; align-items: center;">
         <video id="camera-view" autoplay muted style="display: none;"></video>
+        <img id="captured-image" style="display:none; width:20vw; border-radius:1.5vw; margin: 0 auto;" alt="Captured item"/>
     </span>
     
     <div class="home-content" id="home-content">
@@ -274,19 +364,70 @@
 
     <div class="correction-state" id="correction-state">
         <div class="correction-title">What is the correct classification?</div>
-        <div class="correction-subtitle">Please enter the number corresponding to the waste type:</div>
-        <div class="waste-type-list">
-            <div class="waste-type-item"><span class="waste-type-number">1.</span> METAL</div>
-            <div class="waste-type-item"><span class="waste-type-number">2.</span> PAPER</div>
-            <div class="waste-type-item"><span class="waste-type-number">3.</span> PLASTIC</div>
-            <div class="waste-type-item"><span class="waste-type-number">4.</span> GLASS</div>
-            <div class="waste-type-item"><span class="waste-type-number">5.</span> CLOTHING</div>
-            <div class="waste-type-item"><span class="waste-type-number">6.</span> TEXTILE</div>
-            <div class="waste-type-item"><span class="waste-type-number">7.</span> E-WASTE</div>
-            <div class="waste-type-item"><span class="waste-type-number">8.</span> FOOD WASTE</div>
+        <div class="correction-subtitle">Please enter the number corresponding to the waste type below</div>
+        
+        <div class="categories-container">
+            <div class="category-section">
+                <div class="waste-category">PAPER</div>
+                <div class="waste-type-list">
+                    <div class="waste-type-item"><span class="waste-type-number">1.</span> CARDBOARD</div>
+                    <div class="waste-type-item"><span class="waste-type-number">2.</span> EGG TRAYS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">3.</span> TOILET PAPER AND PAPER TOWEL ROLLS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">4.</span> OTHER PAPER PRODUCTS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">5.</span> PAPER TOWELS AND TISSUES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">6.</span> DISPOSABLE FOOD PACKAGING</div>
+                    <div class="waste-type-item"><span class="waste-type-number">7.</span> GLITTER PAPER</div>
+                    <div class="waste-type-item"><span class="waste-type-number">8.</span> CRAYON DRAWINGS</div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <div class="waste-category">RECYCLABLE PLASTICS</div>
+                <div class="waste-type-list">
+                    <div class="waste-type-item"><span class="waste-type-number">9.</span> BEVERAGE BOTTLES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">10.</span> SHAMPOO/DETERGENT BOTTLES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">11.</span> PLASTIC BAGS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">12.</span> BUBBLE WRAP</div>
+                    <div class="waste-type-item"><span class="waste-type-number">13.</span> PLASTIC PACKAGING</div>
+                    <div class="waste-type-item"><span class="waste-type-number">14.</span> REUSABLE CONTAINERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">15.</span> PACKAGING WITH FOIL</div>
+                    <div class="waste-type-item"><span class="waste-type-number">16.</span> MELAMINE PRODUCTS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">17.</span> EXPIRED CREDIT CARDS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">18.</span> CONTAMINATED PACKAGING</div>
+                    <div class="waste-type-item"><span class="waste-type-number">19.</span> TOYS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">20.</span> STYROFOAM</div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <div class="waste-category">RECYCLABLE GLASS</div>
+                <div class="waste-type-list">
+                    <div class="waste-type-item"><span class="waste-type-number">21.</span> GLASS BOTTLES AND JARS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">22.</span> DRINKING/WINE GLASSES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">23.</span> GLASSWARE CONTAINERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">24.</span> TEMPERED GLASS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">25.</span> MIRRORS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">26.</span> GLASS WITH METAL WIRES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">27.</span> PORCELAIN/CERAMICS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">28.</span> LIGHT BULBS</div>
+                </div>
+            </div>
+
+            <div class="category-section">
+                <div class="waste-category">OTHER WASTE</div>
+                <div class="waste-type-list">
+                    <div class="waste-type-item"><span class="waste-type-number">29.</span> PLANTS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">30.</span> WOOD</div>
+                    <div class="waste-type-item"><span class="waste-type-number">31.</span> DIAPERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">32.</span> OTHER</div>
+                </div>
+            </div>
         </div>
-        <input type="text" class="correction-input" id="correction-input" placeholder="---"/>
-        <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit</button>
+
+        <div class="input-section">
+            <input type="text" class="correction-input" id="correction-input" placeholder="Enter number (1-32)"/>
+            <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction</button>
+        </div>
     </div>
 
     <div class="button-container">
@@ -472,7 +613,8 @@
 
         function showResultState() {
             type = currentPrediction.className.toUpperCase();
-            classifyWaste(type);
+            const confidence = currentPrediction.probability.toFixed(2);
+            classifyWaste(type, confidence);
         }
 
         function showCorrectionState() {
@@ -480,10 +622,18 @@
                 clearTimeout(autoReturnTimer);
             }
 
-            autoReturnTimer = setTimeout(() => {
-                resetToHomeScreen();
-                autoReturnTimer = null;
-            }, 30000);
+            // autoReturnTimer = setTimeout(() => {
+            //     resetToHomeScreen();
+            //     autoReturnTimer = null; 
+            // }, 30000);
+
+            // Hide captured image when showing correction state
+            const imgElem = document.getElementById('captured-image');
+            const videoElem = document.getElementById('camera-view');
+            if (imgElem && videoElem) {
+                imgElem.style.display = 'none';
+                videoElem.style.display = 'none';
+            }
 
             homeContent.classList.add('hide');
             correctionState.classList.add('show');
@@ -498,19 +648,28 @@
 
         function submitCorrection() {
             const inputValue = correctionInput.value.trim();
-            const wasteTypes = ["METAL", "PAPER", "PLASTIC", "GLASS", "CLOTHING", "TEXTILE", "E-WASTE", "FOOD WASTE"];
+            const wasteTypes = [
+                "CARDBOARD", "EGG TRAYS", "TOILET PAPER AND PAPER TOWEL ROLLS", "OTHER PAPER PRODUCTS",
+                "PAPER TOWELS AND TISSUES", "DISPOSABLE FOOD AND DRINK PACKAGING", "GLITTER PAPER", "CRAYON DRAWINGS",
+                "BEVERAGE BOTTLES", "SHAMPOO, SOAP DETERGENT, AND DETERGENT BOTTLES", "PLASTIC BAGS", "BUBBLE WRAP", 
+                "PLASTIC EGG TRAYS, FRUIT BOXES, AND FILM PACKAGING", "REUSABLE CONTAINERS",
+                "PACKAGING WITH FOIL", "MELAMINE PRODUCTS", "EXPIRED CREDIT CARDS", "PLASTIC PACKAGING CONTAMINATED WITH FOOD", "TOYS", "STYROFOAM",
+                "GLASS BOTTLES AND JARS", "DRINKING AND WINE GLASSES", 
+                "GLASSWARE CONTAINERS", "TEMPERED GLASS", "MIRRORS", "GLASS WITH METAL WIRES", "PORCELAIN AND CERAMICS", "LIGHT BULBS",
+                "PLANTS", "WOOD", "DIAPERS", "OTHER"
+            ];
             
-            // Check if input is a number between 1-8
+            // Check if input is a number between 1-32
             const numericInput = parseInt(inputValue);
-            if (isNaN(numericInput) || numericInput < 1 || numericInput > 8) {
+            if (isNaN(numericInput) || numericInput < 1 || numericInput > 32) {
                 correctionInput.classList.add('input-error');
                 correctionInput.value = '';
-                correctionInput.placeholder = 'Enter a number 1-8!';
+                correctionInput.placeholder = 'Enter a number 1-32!';
                 correctionInput.focus();
-                setTimeout(() => {
-                    correctionInput.classList.remove('input-error');
-                    correctionInput.placeholder = '---';
-                }, 3000);
+                // setTimeout(() => {
+                //     correctionInput.classList.remove('input-error');
+                //     correctionInput.placeholder = 'Enter number (1-32)';
+                // }, 3000);
                 return;
             }
             
@@ -518,7 +677,7 @@
             const correctedType = wasteTypes[numericInput - 1];
             
             hideCorrectionState();
-            classifyWaste(correctedType);
+            classifyWaste(correctedType, 1.0); // Manual correction has 100% confidence
         }
 
         // Add Enter key support for correction input
@@ -530,47 +689,133 @@
 
         let autoReturnTimer = null;
         
-        function classifyWaste(type) {
+        function classifyWaste(type, confidence = 0.7) {
             backButton.classList.add('show');
             wrongButton.classList.add('show');
-        
+
             if (autoReturnTimer) {
                 clearTimeout(autoReturnTimer);
             }
 
-            autoReturnTimer = setTimeout(() => {
-                resetToHomeScreen();
-                autoReturnTimer = null;
-            }, 20000);
-    
+            // Capture the current video frame and display as image
+            const videoElem = document.getElementById('camera-view');
+            const imgElem = document.getElementById('captured-image');
+            if (videoElem && imgElem && videoElem.readyState === 4) {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElem.videoWidth;
+                canvas.height = videoElem.videoHeight;
+                const ctx = canvas.getContext('2d');
+                // Mirror the image to match the video
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
+                imgElem.src = canvas.toDataURL('image/png');
+                imgElem.style.display = 'block';
+                videoElem.style.display = 'none';
+            }
+
             let instruction = "";
-            
-            // Set the appropriate instruction based on the waste type
             switch (type) {
-                case "METAL":
-                    instruction = "Take a slight right and move forward to the bin for metals. Make sure the item is clean and place in the bin";
+                // PAPERS
+                case "CARDBOARD":
+                    instruction = "Cardboard is paper product, please place it in the paper bin.";
                     break;
-                case "PAPER":
-                    instruction = "Turn left towards the Community Workshop and place in the blue bin";
+                case "EGG TRAYS":
+                    instruction = "Egg trays are paper products, please place them in the paper bin.";
                     break;
-                case "PLASTIC":
-                    instruction = "Take a slight right and move forward to the bin for plastics. Make sure the item is clean and place in the bin";
+                case "TOILET PAPER AND PAPER TOWEL ROLLS":
+                    instruction = "Toilet paper and paper towel rolls are paper products, please place them in the paper bin.";
                     break;
-                case "GLASS":
-                    instruction = "Take a slight right and move forward to the bin for glass. Make sure the item is clean and place in the bin";
+                case "OTHER PAPER PRODUCTS":
+                    instruction = "Paper products can be placed in the paper bin.";
                     break;
-                case "CLOTHING":
-                    instruction = "If in good condition, turn around and move forward to the clothing donation bin. Otherwise place in the waste bin";
+                
+                case "PAPER TOWELS AND TISSUES":
+                    instruction = "Paper towels, tissues, and napkins are often used and unclean, and not selected for recycling. Please place them in the waste bin.";
                     break;
-                case "TEXTILE":
-                    instruction = "If in good condition, turn around and move forward to the textile donation bin. Otherwise place in the waste bin";
+                case "DISPOSABLE FOOD AND DRINK PACKAGING":
+                    instruction = "Disposable food and drink packaging is often used and unclean, and not selected for recycling. Please place them in the waste bin.";
                     break;
-                case "E-WASTE":
-                    instruction = "Go up to the second floor, turn left to the e-waste bin and place in the bin";
+                case "GLITTER PAPER":
+                    instruction = "Glitter paper is not practical to recycle as it is very difficult to separate the non-paper layer. Please place it in the waste bin.";
                     break;
-                case "FOOD WASTE":
-                    instruction = "Turn around towards the tray return area and place in the compost bin";
+                case "CRAYON DRAWINGS":
+                    instruction = "Crayon drawings are often made on paper but the wax from the crayons makes them non-recyclable. Please place them in the waste bin.";
                     break;
+                case "PLANTS":
+                    instruction = "Plants are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "WOOD":
+                    instruction = "Wood is not recyclable and should be placed in the waste bin.";
+                    break;
+                case "DIAPERS":
+                    instruction = "Diapers are not recyclable and should be placed in the waste bin.";
+                    break;  
+                
+                // PLASTICS
+                case "BEVERAGE BOTTLES":
+                    instruction = "Beverage bottles are recyclable, please place them in the plastic bin.";
+                    break;
+                case "SHAMPOO, SOAP DETERGENT, AND DETERGENT BOTTLES":
+                    instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
+                    break;
+                case "PLASTIC BAGS":
+                    instruction = "Plastic bags are recyclable, please place them in the plastic bin.";
+                    break;
+                case "BUBBLE WRAP":
+                    instruction = "Bubble wrap is recyclable, please place it in the plastic bin.";
+                    break;
+                case "PLASTIC EGG TRAYS, FRUIT BOXES, AND FILM PACKAGING":
+                    instruction = "These items are recyclable, please place them in the plastic bin.";
+                    break;
+                case "REUSABLE CONTAINERS":
+                    instruction = "Reusable containers, such as Tupperware, are recyclable, please place them in the plastic bin.";
+                    break;
+                case "PACKAGING WITH FOIL":
+                    instruction = "It is difficult to separate foil from plastic, so it is not recyclable. Please place it in the waste bin.";
+                    break;
+                case "MELAMINE PRODUCTS":
+                    instruction = "Melamine products, such as plates and bowls, are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "EXPIRED CREDIT CARDS":
+                    instruction = "Expired credit cards are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "PLASTIC PACKAGING CONTAMINATED WITH FOOD":
+                    instruction = "Plastic packaging contaminated with food is not recyclable. Please place it in the waste bin.";
+                    break;
+                case "TOYS":
+                    instruction = "Toys should be donated if in good condition, else, place in the waste bin.";
+                    break;
+                case "STYROFOAM":
+                    instruction = "Styrofoam is not recyclable and should be placed in the waste bin.";
+                    break;
+
+                // GLASS
+                case "GLASS BOTTLES AND JARS":
+                    instruction = "Glass bottles and jars are recyclable, please place them in the glass bin.";
+                    break;
+                case "DRINKING AND WINE GLASSES":
+                    instruction = "Drinking and wine glasses are recyclable, please place them in the glass bin.";
+                    break;
+                case "GLASSWARE CONTAINERS":
+                    instruction = "Glassware containers, such as Pyrex and oven-safe containers, are often used and unclean. Please place them in the waste bin.";
+                    break;
+                case "TEMPERED GLASS":
+                    instruction = "Tempered glass is not recyclable and should be placed in the waste bin.";
+                    break;
+                case "MIRRORS":
+                    instruction = "Mirrors are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "GLASS WITH METAL WIRES":
+                    instruction = "Glass with metal wires is not recyclable and should be placed in the waste bin.";
+                    break;
+                case "PORCELAIN AND CERAMICS":
+                    instruction = "Porcelain and ceramics are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "LIGHT BULBS":
+                    instruction = "Light bulbs are not recyclable and should be placed in the E-waste bin.";
+                    break;
+                    
                 default:
                     instruction = "Please check with local waste management for proper disposal";
             }
@@ -579,13 +824,26 @@
             titleContainer.classList.add('result-state');
             document.getElementById('main-title').textContent = type;
             document.getElementById('byline').textContent = instruction;
-            document.getElementById('bottom-text').textContent = "Check that your item is not a special case!";
+
+            // Create and display confidence information
+            const confidencePercent = Math.round(confidence * 100);
+            const bottomText = document.getElementById('bottom-text');
+            bottomText.innerHTML = `
+                <div class="confidence-display">
+                    Confidence: 
+                    <div class="confidence-bar">
+                        <div class="confidence-level" style="width: ${confidencePercent}%"></div>
+                    </div>
+                    ${confidencePercent}%
+                </div>
+            `;
+
             classified = true;
         }
 
         function resetToHomeScreen() {
             if (!classified) return;
-            
+
             // Clear all timers
             if (stabilityTimer) {
                 clearTimeout(stabilityTimer);
@@ -593,30 +851,39 @@
                 stabilityStartTime = null;
                 lastStablePrediction = null;
             }
-            
+
             if (classificationTimeout) {
                 clearTimeout(classificationTimeout);
                 classificationTimeout = null;
             }
-            
+
             // Clear auto-return timer if it exists
             if (autoReturnTimer) {
                 clearTimeout(autoReturnTimer);
                 autoReturnTimer = null;
             }
-            
+
             // Hide all states
             hideCorrectionState();
-            
+
             // Hide buttons
             backButton.classList.remove('show');
             wrongButton.classList.remove('show');
-            
+
             // Reset to initial state
             titleContainer.classList.remove('result-state');
             document.getElementById('main-title').textContent = "AI Waste Sorter";
             document.getElementById('byline').textContent = "by Vidacity";
             document.getElementById('bottom-text').innerHTML = '1. Hold your item up to the camera &nbsp;&nbsp; 2. Wait for classifiction &nbsp;&nbsp; 3. Follow the instructions!';
+
+            // Show video, hide captured image
+            const videoElem = document.getElementById('camera-view');
+            const imgElem = document.getElementById('captured-image');
+            if (videoElem && imgElem) {
+                videoElem.style.display = 'block';
+                imgElem.style.display = 'none';
+            }
+
             classified = false;
         }
     </script>
