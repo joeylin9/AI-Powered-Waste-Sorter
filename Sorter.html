@@ -74,7 +74,6 @@
             font-size: 1.4vw;
             color: #333;
             font-weight: normal;
-            max-width: 45vw;
         }
         
         .confidence-display {
@@ -241,19 +240,19 @@
             box-shadow: 0 0 10px rgba(42, 111, 151, 0.3);
         }
 
-        .submit-button {
+        .submit-button, .correction-back-button {
             cursor: pointer;
             font-size: 1.2vw;
             padding: 1vh 2vw;
-            border-radius: 1vw;
-            background-color: #2a6f97;
-            color: white;
-            border: none;
             transition: background-color 0.3s ease;
+            border: 1px solid #2a6f97;
+            border-radius: 1vw;
+            background: white;
+            color: #2a6f97;
         }
 
-        .submit-button:hover {
-            background-color: #1a4f6f;
+        .submit-button:hover, .correction-back-button:hover {
+            background: #f4f4f4;
         }
 
         .correction-title {
@@ -269,6 +268,12 @@
             color: #666;
             margin-bottom: 3vh;
             text-align: center;
+        }
+
+        .correction-button-section {
+            display: flex;
+            justify-content: center;
+            gap: 1.5vw;
         }
 
         .categories-container {
@@ -426,7 +431,10 @@
 
         <div class="input-section">
             <input type="text" class="correction-input" id="correction-input" placeholder="Enter number (1-32)"/>
-            <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction</button>
+            <div class="correction-button-section">
+                <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction</button>
+                <button class="correction-back-button" id="correction-back-button" onclick="hideCorrectionState()">Back</button>
+            </div>
         </div>
     </div>
 
