@@ -62,6 +62,7 @@
             font-size: 7vw;
             color: #2a6f97;
             margin-bottom: 2vh;
+            max-width: 80vw;
         }
 
         .feedback-state #byline {
@@ -74,6 +75,7 @@
             font-size: 1.4vw;
             color: #333;
             font-weight: normal;
+            max-width: 80vw;
         }
         
         .confidence-display {
@@ -318,10 +320,6 @@
             transition: background-color 0.2s ease;
         }
 
-        .waste-type-item:hover {
-            background-color: #e3f2fd;
-        }
-
         .waste-type-number {
             font-weight: bold;
             color: #2a6f97;
@@ -376,9 +374,9 @@
                 <div class="waste-category">PAPER</div>
                 <div class="waste-type-list">
                     <div class="waste-type-item"><span class="waste-type-number">1.</span> CARDBOARD</div>
-                    <div class="waste-type-item"><span class="waste-type-number">2.</span> EGG TRAYS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">2.</span> PAPER EGG TRAYS</div>
                     <div class="waste-type-item"><span class="waste-type-number">3.</span> TOILET PAPER AND PAPER TOWEL ROLLS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">4.</span> OTHER PAPER PRODUCTS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">4.</span> MIXED AND OTHER PAPER</div>
                     <div class="waste-type-item"><span class="waste-type-number">5.</span> PAPER TOWELS AND TISSUES</div>
                     <div class="waste-type-item"><span class="waste-type-number">6.</span> DISPOSABLE FOOD PACKAGING</div>
                     <div class="waste-type-item"><span class="waste-type-number">7.</span> GLITTER PAPER</div>
@@ -387,43 +385,43 @@
             </div>
 
             <div class="category-section">
-                <div class="waste-category">RECYCLABLE PLASTICS</div>
+                <div class="waste-category">PLASTICS</div>
                 <div class="waste-type-list">
-                    <div class="waste-type-item"><span class="waste-type-number">9.</span> BEVERAGE BOTTLES</div>
-                    <div class="waste-type-item"><span class="waste-type-number">10.</span> SHAMPOO/DETERGENT BOTTLES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">9.</span> PLASTIC BEVERAGE BOTTLES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">10.</span> SHAMPOO/SOAP/DETERGENT BOTTLES</div>
                     <div class="waste-type-item"><span class="waste-type-number">11.</span> PLASTIC BAGS</div>
                     <div class="waste-type-item"><span class="waste-type-number">12.</span> BUBBLE WRAP</div>
                     <div class="waste-type-item"><span class="waste-type-number">13.</span> PLASTIC PACKAGING</div>
-                    <div class="waste-type-item"><span class="waste-type-number">14.</span> REUSABLE CONTAINERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">14.</span> REUSABLE PLASTIC CONTAINERS</div>
                     <div class="waste-type-item"><span class="waste-type-number">15.</span> PACKAGING WITH FOIL</div>
                     <div class="waste-type-item"><span class="waste-type-number">16.</span> MELAMINE PRODUCTS</div>
                     <div class="waste-type-item"><span class="waste-type-number">17.</span> EXPIRED CREDIT CARDS</div>
                     <div class="waste-type-item"><span class="waste-type-number">18.</span> CONTAMINATED PACKAGING</div>
                     <div class="waste-type-item"><span class="waste-type-number">19.</span> TOYS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">20.</span> STYROFOAM</div>
                 </div>
             </div>
 
             <div class="category-section">
-                <div class="waste-category">RECYCLABLE GLASS</div>
+                <div class="waste-category">GLASS</div>
                 <div class="waste-type-list">
-                    <div class="waste-type-item"><span class="waste-type-number">21.</span> GLASS BOTTLES AND JARS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">22.</span> DRINKING/WINE GLASSES</div>
-                    <div class="waste-type-item"><span class="waste-type-number">23.</span> GLASSWARE CONTAINERS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">24.</span> TEMPERED GLASS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">25.</span> MIRRORS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">26.</span> GLASS WITH METAL WIRES</div>
-                    <div class="waste-type-item"><span class="waste-type-number">27.</span> PORCELAIN/CERAMICS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">28.</span> LIGHT BULBS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">20.</span> GLASS BOTTLES AND JARS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">21.</span> DRINKING/WINE GLASSES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">22.</span> GLASSWARE CONTAINERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">23.</span> TEMPERED GLASS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">24.</span> MIRRORS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">25.</span> GLASS WITH METAL WIRES</div>
+                    <div class="waste-type-item"><span class="waste-type-number">26.</span> LIGHT BULBS</div>
                 </div>
             </div>
 
             <div class="category-section">
-                <div class="waste-category">OTHER WASTE</div>
+                <div class="waste-category">OTHER</div>
                 <div class="waste-type-list">
-                    <div class="waste-type-item"><span class="waste-type-number">29.</span> PLANTS</div>
-                    <div class="waste-type-item"><span class="waste-type-number">30.</span> WOOD</div>
-                    <div class="waste-type-item"><span class="waste-type-number">31.</span> DIAPERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">27.</span> PLANTS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">28.</span> WOOD</div>
+                    <div class="waste-type-item"><span class="waste-type-number">29.</span> DIAPERS</div>
+                    <div class="waste-type-item"><span class="waste-type-number">30.</span> STYROFOAM</div>
+                    <div class="waste-type-item"><span class="waste-type-number">31.</span> PORCELAIN/CERAMICS</div>    
                     <div class="waste-type-item"><span class="waste-type-number">32.</span> OTHER</div>
                 </div>
             </div>
@@ -432,8 +430,8 @@
         <div class="input-section">
             <input type="text" class="correction-input" id="correction-input" placeholder="Enter number (1-32)"/>
             <div class="correction-button-section">
-                <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction</button>
                 <button class="correction-back-button" id="correction-back-button" onclick="hideCorrectionState()">Back</button>
+                <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction</button>
             </div>
         </div>
     </div>
@@ -652,19 +650,54 @@
         function hideCorrectionState() {
             correctionState.classList.remove('show');
             homeContent.classList.remove('hide');
+            const imgElem = document.getElementById('captured-image');
+            if (imgElem) {
+                imgElem.style.display = 'block';
+            }
         }
 
         function submitCorrection() {
             const inputValue = correctionInput.value.trim();
             const wasteTypes = [
-                "CARDBOARD", "EGG TRAYS", "TOILET PAPER AND PAPER TOWEL ROLLS", "OTHER PAPER PRODUCTS",
-                "PAPER TOWELS AND TISSUES", "DISPOSABLE FOOD AND DRINK PACKAGING", "GLITTER PAPER", "CRAYON DRAWINGS",
-                "BEVERAGE BOTTLES", "SHAMPOO, SOAP DETERGENT, AND DETERGENT BOTTLES", "PLASTIC BAGS", "BUBBLE WRAP", 
-                "PLASTIC EGG TRAYS, FRUIT BOXES, AND FILM PACKAGING", "REUSABLE CONTAINERS",
-                "PACKAGING WITH FOIL", "MELAMINE PRODUCTS", "EXPIRED CREDIT CARDS", "PLASTIC PACKAGING CONTAMINATED WITH FOOD", "TOYS", "STYROFOAM",
-                "GLASS BOTTLES AND JARS", "DRINKING AND WINE GLASSES", 
-                "GLASSWARE CONTAINERS", "TEMPERED GLASS", "MIRRORS", "GLASS WITH METAL WIRES", "PORCELAIN AND CERAMICS", "LIGHT BULBS",
-                "PLANTS", "WOOD", "DIAPERS", "OTHER"
+                // PAPER
+                "CARDBOARD", // 1
+                "PAPER EGG TRAYS", // 2
+                "TOILET PAPER AND PAPER TOWEL ROLLS", // 3
+                "MIXED AND OTHER PAPER", // 4
+                "PAPER TOWELS AND TISSUES", // 5
+                "DISPOSABLE FOOD PACKAGING", // 6
+                "GLITTER PAPER", // 7
+                "CRAYON DRAWINGS", // 8
+
+                // PLASTICS
+                "PLASTIC BEVERAGE BOTTLES", // 9
+                "SHAMPOO/SOAP/DETERGENT BOTTLES", // 10
+                "PLASTIC BAGS", // 11
+                "BUBBLE WRAP", // 12
+                "PLASTIC PACKAGING", // 13
+                "REUSABLE PLASTIC CONTAINERS", // 14
+                "PACKAGING WITH FOIL", // 15
+                "MELAMINE PRODUCTS", // 16
+                "EXPIRED CREDIT CARDS", // 17
+                "CONTAMINATED PACKAGING", // 18
+                "TOYS", // 19
+
+                // GLASS
+                "GLASS BOTTLES AND JARS", // 20
+                "DRINKING/WINE GLASSES", // 21
+                "GLASSWARE CONTAINERS", // 22
+                "TEMPERED GLASS", // 23
+                "MIRRORS", // 24
+                "GLASS WITH METAL WIRES", // 25
+                "LIGHT BULBS", // 26
+
+                // OTHER
+                "PLANTS", // 27
+                "WOOD", // 28
+                "DIAPERS", // 29
+                "STYROFOAM", // 30
+                "PORCELAIN/CERAMICS", // 31
+                "OTHER" // 32
             ];
             
             // Check if input is a number between 1-32
@@ -685,7 +718,7 @@
             const correctedType = wasteTypes[numericInput - 1];
             
             hideCorrectionState();
-            classifyWaste(correctedType, 1.0); // Manual correction has 100% confidence
+            classifyWaste(correctedType, 1.0);
         }
 
         // Add Enter key support for correction input
@@ -726,45 +759,35 @@
             switch (type) {
                 // PAPERS
                 case "CARDBOARD":
-                    instruction = "Cardboard is paper product, please place it in the paper bin.";
+                    instruction = "Cardboard is a paper product, please place it in the paper bin.";
                     break;
-                case "EGG TRAYS":
-                    instruction = "Egg trays are paper products, please place them in the paper bin.";
+                case "PAPER EGG TRAYS":
+                    instruction = "Paper egg trays are made from recycled paper pulp, please place them in the paper bin.";
                     break;
                 case "TOILET PAPER AND PAPER TOWEL ROLLS":
-                    instruction = "Toilet paper and paper towel rolls are paper products, please place them in the paper bin.";
+                    instruction = "Toilet paper and paper towel rolls are typically made of cardboard, a paper product, so please place them in the paper bin.";
                     break;
-                case "OTHER PAPER PRODUCTS":
+                case "MIXED AND OTHER PAPER":
                     instruction = "Paper products can be placed in the paper bin.";
                     break;
-                
                 case "PAPER TOWELS AND TISSUES":
-                    instruction = "Paper towels, tissues, and napkins are often used and unclean, and not selected for recycling. Please place them in the waste bin.";
+                    instruction = "Paper towels, tissues, and napkins are often used and unclean, and should be placed in the waste bin.";
                     break;
-                case "DISPOSABLE FOOD AND DRINK PACKAGING":
-                    instruction = "Disposable food and drink packaging is often used and unclean, and not selected for recycling. Please place them in the waste bin.";
+                case "DISPOSABLE FOOD AND DRINK PAPER PACKAGING":
+                    instruction = "Disposable food and drink paper packaging is often used and unclean, and should be placed in the waste bin.";
                     break;
                 case "GLITTER PAPER":
                     instruction = "Glitter paper is not practical to recycle as it is very difficult to separate the non-paper layer. Please place it in the waste bin.";
                     break;
                 case "CRAYON DRAWINGS":
-                    instruction = "Crayon drawings are often made on paper but the wax from the crayons makes them non-recyclable. Please place them in the waste bin.";
+                    instruction = "During recycling, paper is broken down by water, but crayon wax prevents the process and thus makes the item unrecyclable. Please place it in the waste bin.";
                     break;
-                case "PLANTS":
-                    instruction = "Plants are not recyclable and should be placed in the waste bin.";
-                    break;
-                case "WOOD":
-                    instruction = "Wood is not recyclable and should be placed in the waste bin.";
-                    break;
-                case "DIAPERS":
-                    instruction = "Diapers are not recyclable and should be placed in the waste bin.";
-                    break;  
                 
                 // PLASTICS
-                case "BEVERAGE BOTTLES":
-                    instruction = "Beverage bottles are recyclable, please place them in the plastic bin.";
+                case "PLASTIC BEVERAGE BOTTLES":
+                    instruction = "Plastic beverage bottles are recyclable, please place them in the plastic bin.";
                     break;
-                case "SHAMPOO, SOAP DETERGENT, AND DETERGENT BOTTLES":
+                case "SHAMPOO, SOAP, AND DETERGENT BOTTLES":
                     instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
                     break;
                 case "PLASTIC BAGS":
@@ -773,59 +796,70 @@
                 case "BUBBLE WRAP":
                     instruction = "Bubble wrap is recyclable, please place it in the plastic bin.";
                     break;
-                case "PLASTIC EGG TRAYS, FRUIT BOXES, AND FILM PACKAGING":
+                case "PLASTIC PACKAGING":
                     instruction = "These items are recyclable, please place them in the plastic bin.";
                     break;
-                case "REUSABLE CONTAINERS":
-                    instruction = "Reusable containers, such as Tupperware, are recyclable, please place them in the plastic bin.";
+                case "REUSABLE PLASTIC CONTAINERS":
+                    instruction = "Reusable food storage containers, such as Tupperware, are recyclable, please place them in the plastic bin.";
                     break;
                 case "PACKAGING WITH FOIL":
-                    instruction = "It is difficult to separate foil from plastic, so it is not recyclable. Please place it in the waste bin.";
+                    instruction = "It is difficult to separate the foil from plastic, so it is not recyclable. Please place it in the waste bin.";
                     break;
                 case "MELAMINE PRODUCTS":
-                    instruction = "Melamine products, such as plates and bowls, are not recyclable and should be placed in the waste bin.";
+                    instruction = "Melamine products, such as melamine tableware, are not recyclable and should be placed in the waste bin.";
                     break;
                 case "EXPIRED CREDIT CARDS":
-                    instruction = "Expired credit cards are not recyclable and should be placed in the waste bin.";
+                    instruction = "Expired credit cards are not recyclable. Cancel the card, cut it in half, and place it in the waste bin.";
                     break;
                 case "PLASTIC PACKAGING CONTAMINATED WITH FOOD":
-                    instruction = "Plastic packaging contaminated with food is not recyclable. Please place it in the waste bin.";
+                    instruction = "Anything with food waste, even if just a bit of grease, is not recyclable and should be placed in the waste bin.";
                     break;
                 case "TOYS":
-                    instruction = "Toys should be donated if in good condition, else, place in the waste bin.";
-                    break;
-                case "STYROFOAM":
-                    instruction = "Styrofoam is not recyclable and should be placed in the waste bin.";
+                    instruction = "Toys should be donated if in good condition, else, because they are made of mixed materials, place in the waste bin.";
                     break;
 
                 // GLASS
                 case "GLASS BOTTLES AND JARS":
-                    instruction = "Glass bottles and jars are recyclable, please place them in the glass bin.";
+                    instruction = "Glass bottles and jars are recyclable, please place them carefully in the glass bin.";
                     break;
                 case "DRINKING AND WINE GLASSES":
-                    instruction = "Drinking and wine glasses are recyclable, please place them in the glass bin.";
+                    instruction = "Drinking and wine glasses are recyclable, please place them carefully in the glass bin.";
                     break;
                 case "GLASSWARE CONTAINERS":
-                    instruction = "Glassware containers, such as Pyrex and oven-safe containers, are often used and unclean. Please place them in the waste bin.";
+                    instruction = "Glassware containers, such as Pyrex and oven-safe containers, are often used and unclean, and should be placed carefully in the waste bin.";
                     break;
                 case "TEMPERED GLASS":
-                    instruction = "Tempered glass is not recyclable and should be placed in the waste bin.";
+                    instruction = "Tempered glass has a different chemical composition compared to regular glass, making it unrecyclable. It should be placed carefully in the waste bin.";
                     break;
                 case "MIRRORS":
-                    instruction = "Mirrors are not recyclable and should be placed in the waste bin.";
+                    instruction = "Mirrors are not recyclable because of the coatings on the glass that make it reflective. They should be placed carefully in the waste bin.";
                     break;
                 case "GLASS WITH METAL WIRES":
-                    instruction = "Glass with metal wires is not recyclable and should be placed in the waste bin.";
+                    instruction = "Glass with metal wires is difficult to process so it is not recyclable. It should be placed carefully in the waste bin.";
+                    break;
+                case "LIGHT BULBS":
+                    instruction = "Light bulbs should be placed in the E-waste bin.";
+                    break;
+                    
+                // OTHER
+                case "PLANTS":
+                    instruction = "Plants are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "WOOD":
+                    instruction = "Wood is not recyclable and should be placed in the waste bin.";
+                    break;
+                case "DIAPERS":
+                    instruction = "Diapers, even if clean, are not recyclable and should be placed in the waste bin.";
+                    break;
+                case "STYROFOAM":
+                    instruction = "Styrofoam is not recyclable and should be placed in the waste bin.";
                     break;
                 case "PORCELAIN AND CERAMICS":
                     instruction = "Porcelain and ceramics are not recyclable and should be placed in the waste bin.";
                     break;
-                case "LIGHT BULBS":
-                    instruction = "Light bulbs are not recyclable and should be placed in the E-waste bin.";
-                    break;
-                    
+
                 default:
-                    instruction = "Please check with local waste management for proper disposal";
+                    instruction = "Please check with local waste management for proper disposal. Recyclopedia.sg is a good resource!";
             }
 
             // Change display to result state
