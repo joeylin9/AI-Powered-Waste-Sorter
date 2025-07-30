@@ -441,8 +441,6 @@
         <button class="wrong-button" id="wrong-button" onclick="showCorrectionState()">Wrong Classification?</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script>
         const video = document.getElementById('camera-view');
         const titleContainer = document.querySelector('.title-container');
@@ -452,8 +450,8 @@
         const correctionInput = document.getElementById('correction-input');
         const backButton = document.getElementById('back-button');
         const wrongButton = document.getElementById('wrong-button');
-        let type = "";
         
+        let type = "";
         let classified = false;
         let isThinking = false;
         let classificationTimeout = null;
@@ -464,35 +462,32 @@
         let stabilityStartTime = null;
         let lastStablePrediction = null;
         
-        // Teachable Machine model URL
-        const modelURL = "./my_model/";
-        let model, maxPredictions;
-        let modelLoaded = false;
+        // API endpoint for your PyTorch model
+        const API_ENDPOINT = 'http://localhost:5000/predict';
+        
         let currentPrediction = null;
+        let isModelReady = false;
         
-        // Load the model when page loads
-        window.addEventListener('DOMContentLoaded', initModel);
-        
-        // Initialize the machine learning model
-        async function initModel() {
+        // Check if backend is ready
+        async function checkBackend() {
             try {
-                const URL = modelURL;
-                const modelJSONURL = URL + "model.json";
-                const metadataURL = URL + "metadata.json";
+                const response = await fetch('http://localhost:5000/health');
+                const data = await response.json();
+                isModelReady = data.model_loaded;
+                console.log("Backend status:", data);
                 
-                // Load the model
-                model = await tmImage.load(modelJSONURL, metadataURL);
-                maxPredictions = model.getTotalClasses();
-                modelLoaded = true;
-                console.log("Model loaded successfully");
-                
-                // Start the camera
-                startCamera();
-                
+                if (isModelReady) {
+                    startCamera();
+                } else {
+                    alert("Model not loaded on backend");
+                }
             } catch (error) {
-                console.error("Error loading model:", error);
+                alert("Backend not available: " + error);
             }
         }
+        
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', checkBackend);
         
         // Start camera
         function startCamera() {
@@ -508,31 +503,67 @@
                     };
                 })
                 .catch(err => {
-                    console.error("Camera access error: ", err);
-                    document.getElementById('bottom-text').textContent = 'Camera not available';
+                    alert("Camera access error: ", err);
                 });
+        }
+
+        // Convert video frame to base64 image
+        function captureFrame() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/png');
+        }
+
+        // Make prediction using PyTorch backend
+        async function makePrediction() {
+            if (!isModelReady || video.readyState !== 4) return null;
+            
+            try {
+                const imageData = captureFrame();
+                
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    return {
+                        className: result.className,
+                        probability: result.probability
+                    };
+                } else {
+                    alert('Prediction failed:', result.error);
+                    return null;
+                }
+                
+            } catch (error) {
+                alert('Prediction error:', error);
+                return null;
+            }
         }
 
         // Prediction loop
         async function predictionLoop() {
-            if (modelLoaded && video.readyState === 4) {
+            if (isModelReady) {
                 try {
-                    // Predict from video frame
-                    const prediction = await model.predict(video);
+                    const prediction = await makePrediction();
                     
-                    // Find the prediction with highest probability
-                    let highestPrediction = prediction[0];
-                    for (let i = 1; i < maxPredictions; i++) {
-                        if (prediction[i].probability > highestPrediction.probability) {
-                            highestPrediction = prediction[i];
-                        }
-                    }
-                    
-                    if (highestPrediction.probability > 0.70 && 
-                        highestPrediction.className.toLowerCase() !== 'background' &&
-                        highestPrediction.className.toLowerCase() !== 'nothing') {
-                        
-                        currentPrediction = highestPrediction;
+                    if (prediction && prediction.probability > 0.20) {
+                        currentPrediction = prediction;
                         
                         // Clear any existing reset timeout
                         if (resetTimeout) {
@@ -546,7 +577,7 @@
                             if (!stabilityTimer) {
                                 // Start new stability timer
                                 stabilityStartTime = Date.now();
-                                lastStablePrediction = highestPrediction;
+                                lastStablePrediction = prediction;
                                 
                                 stabilityTimer = setTimeout(() => {
                                     // After 0.5 seconds of stable detection, start thinking
@@ -561,15 +592,15 @@
                                     stabilityTimer = null;
                                     stabilityStartTime = null;
                                     lastStablePrediction = null;
-                                }, 500); // .5 second stability requirement
+                                }, 500); // 0.5 second stability requirement
                             } else {
                                 // Update the stable prediction (timer is already running)
-                                lastStablePrediction = highestPrediction;
+                                lastStablePrediction = prediction;
                             }
                         }
                         
                     } else {
-                        // Background or low confidence detection
+                        // Low confidence detection
                         currentPrediction = null;
                         
                         // Clear stability timer if running
@@ -593,12 +624,14 @@
                     }
                     
                 } catch (error) {
-                    console.error("Prediction error:", error);
+                    alert("Prediction error:", error);
                 }
             }
             
-            // Continue the prediction loop
-            window.requestAnimationFrame(predictionLoop);
+            // Continue the prediction loop with a small delay to avoid overwhelming the server
+            setTimeout(() => {
+                window.requestAnimationFrame(predictionLoop);
+            }, 100); // 100ms delay between predictions
         }
 
         function showThinkingState() {
@@ -619,7 +652,7 @@
 
         function showResultState() {
             type = currentPrediction.className.toUpperCase();
-            const confidence = currentPrediction.probability.toFixed(2);
+            const confidence = currentPrediction.probability;
             classifyWaste(type, confidence);
         }
 
@@ -627,11 +660,6 @@
             if (autoReturnTimer) {
                 clearTimeout(autoReturnTimer);
             }
-
-            // autoReturnTimer = setTimeout(() => {
-            //     resetToHomeScreen();
-            //     autoReturnTimer = null; 
-            // }, 30000);
 
             // Hide captured image when showing correction state
             const imgElem = document.getElementById('captured-image');
@@ -665,13 +693,13 @@
                 "TOILET PAPER AND PAPER TOWEL ROLLS", // 3
                 "MIXED AND OTHER PAPER", // 4
                 "PAPER TOWELS AND TISSUES", // 5
-                "DISPOSABLE PAPER FOOD PACKAGING", // 6
+                "DISPOSABLE FOOD PACKAGING", // 6
                 "GLITTER PAPER", // 7
                 "CRAYON DRAWINGS", // 8
 
                 // PLASTICS
                 "PLASTIC BEVERAGE BOTTLES", // 9
-                "SHAMPOO/SOAP/DETERGENT BOTTLES", // 10
+                "SHAMPOO_SOAP_DETERGENT BOTTLES", // 10
                 "PLASTIC BAGS", // 11
                 "BUBBLE WRAP", // 12
                 "PLASTIC PACKAGING", // 13
@@ -684,7 +712,7 @@
 
                 // GLASS
                 "GLASS BOTTLES AND JARS", // 20
-                "DRINKING/WINE GLASSES", // 21
+                "DRINKING_WINE GLASSES", // 21
                 "GLASSWARE CONTAINERS", // 22
                 "TEMPERED GLASS", // 23
                 "MIRRORS", // 24
@@ -696,7 +724,7 @@
                 "WOOD", // 28
                 "DIAPERS", // 29
                 "STYROFOAM", // 30
-                "PORCELAIN/CERAMICS", // 31
+                "PORCELAIN_CERAMICS", // 31
                 "OTHER" // 32
             ];
             
@@ -707,10 +735,6 @@
                 correctionInput.value = '';
                 correctionInput.placeholder = 'Enter a number 1-32!';
                 correctionInput.focus();
-                // setTimeout(() => {
-                //     correctionInput.classList.remove('input-error');
-                //     correctionInput.placeholder = 'Enter number (1-32)';
-                // }, 3000);
                 return;
             }
             
@@ -773,7 +797,7 @@
                 case "PAPER TOWELS AND TISSUES":
                     instruction = "Paper towels, tissues, and napkins are often used and unclean, and should be placed in the waste bin.";
                     break;
-                case "DISPOSABLE FOOD AND DRINK PAPER PACKAGING":
+                case "DISPOSABLE FOOD PACKAGING":
                     instruction = "Disposable food and drink paper packaging is often used and unclean, and should be placed in the waste bin.";
                     break;
                 case "GLITTER PAPER":
@@ -787,14 +811,14 @@
                 case "PLASTIC BEVERAGE BOTTLES":
                     instruction = "Plastic beverage bottles are recyclable, please place them in the plastic bin.";
                     break;
-                case "SHAMPOO, SOAP, AND DETERGENT BOTTLES":
+                case "SHAMPOO_SOAP_DETERGENT BOTTLES":
                     instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
                     break;
                 case "PLASTIC BAGS":
                     instruction = "Plastic bags are recyclable, please place them in the plastic bin.";
                     break;
                 case "BUBBLE WRAP":
-                    instruction = "Bubble wrap is recyclable, please place it in the plastic bin.";
+                    instruction = "Bubble wrap is recyclable, please place them in the plastic bin.";
                     break;
                 case "PLASTIC PACKAGING":
                     instruction = "These items are recyclable, please place them in the plastic bin.";
@@ -822,7 +846,7 @@
                 case "GLASS BOTTLES AND JARS":
                     instruction = "Glass bottles and jars are recyclable, please place them carefully in the glass bin.";
                     break;
-                case "DRINKING AND WINE GLASSES":
+                case "DRINKING_WINE GLASSES":
                     instruction = "Drinking and wine glasses are recyclable, please place them carefully in the glass bin.";
                     break;
                 case "GLASSWARE CONTAINERS":
@@ -854,7 +878,7 @@
                 case "STYROFOAM":
                     instruction = "Styrofoam is not recyclable and should be placed in the waste bin.";
                     break;
-                case "PORCELAIN AND CERAMICS":
+                case "PORCELAIN_CERAMICS":
                     instruction = "Porcelain and ceramics are not recyclable and should be placed in the waste bin.";
                     break;
 
