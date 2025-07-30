@@ -336,9 +336,224 @@
             padding-top: 2vh;
             border-top: 2px solid #e9ecef;
         }
+
+        /* Dashboard Styles */
+        .dashboard-tab {
+            position: fixed;
+            top: 2vh;
+            right: 2vw;
+            background: #2a6f97;
+            color: white;
+            padding: 1vh 2vw;
+            border-radius: 1vw;
+            cursor: pointer;
+            font-size: 1vw;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(42, 111, 151, 0.3);
+        }
+
+        .dashboard-tab:hover {
+            background: #1a4f6f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(42, 111, 151, 0.4);
+        }
+
+        .dashboard-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .dashboard-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .dashboard-panel {
+            position: fixed;
+            top: 5vh;
+            left: 5vw;
+            width: 90vw;
+            height: 90vh;
+            background: white;
+            border-radius: 2vw;
+            padding: 2vh 2vw;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+            transform: scale(0.9) translateY(-50px);
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-overlay.show .dashboard-panel {
+            transform: scale(1) translateY(0);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3vh;
+            padding-bottom: 1vh;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .dashboard-title {
+            font-size: 2.5vw;
+            color: #2a6f97;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .dashboard-close {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 1vw;
+            padding: 0.5vh 1.5vw;
+            cursor: pointer;
+            font-size: 1.2vw;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .dashboard-close:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .predictions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5vw;
+            margin-bottom: 2vh;
+        }
+
+        .prediction-item {
+            background: #f8f9fa;
+            border-radius: 1vw;
+            padding: 1vh 1.5vw;
+            border: 2px solid #e9ecef;
+            transition: all 0.2s ease;
+        }
+
+        .prediction-item.active {
+            border-color: #2a6f97;
+            background: #e8f4f8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(42, 111, 151, 0.2);
+        }
+
+        .prediction-label {
+            font-size: 0.9vw;
+            font-weight: 600;
+            color: #2a6f97;
+            margin-bottom: 0.5vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prediction-value {
+            font-size: 0.8vw;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .prediction-bar-container {
+            width: 100%;
+            height: 0.8vh;
+            background: #e0e0e0;
+            border-radius: 0.4vh;
+            overflow: hidden;
+            margin-top: 0.5vh;
+        }
+
+        .prediction-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2a6f97, #4a8bc2);
+            border-radius: 0.4vh;
+            transition: width 0.3s ease;
+            min-width: 1px;
+        }
+
+        .prediction-bar.high-confidence {
+            background: linear-gradient(90deg, #28a745, #34d058);
+        }
+
+        .prediction-bar.medium-confidence {
+            background: linear-gradient(90deg, #ffc107, #ffdd57);
+        }
+
+        .top-predictions {
+            background: #f0f8ff;
+            border-radius: 1vw;
+            padding: 1.5vh 1.5vw;
+            margin-bottom: 2vh;
+            border: 2px solid #cce7ff;
+        }
+
+        .top-predictions-title {
+            font-size: 1.2vw;
+            font-weight: 600;
+            color: #2a6f97;
+            margin-bottom: 1vh;
+        }
+
+        .top-prediction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5vh 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .top-prediction-item:last-child {
+            border-bottom: none;
+        }
+
+        .top-prediction-name {
+            font-size: 0.9vw;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .top-prediction-confidence {
+            font-size: 0.8vw;
+            font-weight: 600;
+            color: #2a6f97;
+        }
     </style>
 </head>
 <body>
+    <!-- Dashboard Tab -->
+    <div class="dashboard-tab" onclick="showDashboard()">
+        📊 Live Predictions
+    </div>
+
+    <!-- Dashboard Overlay -->
+    <div class="dashboard-overlay" id="dashboard-overlay" onclick="hideDashboard(event)">
+        <div class="dashboard-panel" onclick="event.stopPropagation()">
+            <div class="dashboard-header">
+                <h2 class="dashboard-title">Real-Time Predictions</h2>
+                <button class="dashboard-close" onclick="hideDashboard()">✕ Close</button>
+            </div>
+            
+            <div class="top-predictions">
+                <div class="top-predictions-title">Top 5 Current Predictions</div>
+                <div id="top-predictions-list"></div>
+            </div>
+            
+            <div class="predictions-grid" id="predictions-grid"></div>
+        </div>
+    </div>
 
     <span style="border-radius: 2vw; display: flex; flex-direction: column; align-items: center;">
         <video id="camera-view" autoplay muted style="display: none;"></video>
@@ -468,6 +683,58 @@
         let currentPrediction = null;
         let isModelReady = false;
         
+        // Dashboard variables
+        let allPredictions = {};
+        let isDashboardOpen = false;
+        
+        // Waste type categories for dashboard
+        const wasteTypes = [
+            // PAPER
+            "CARDBOARD", // 1
+            "PAPER EGG TRAYS", // 2
+            "TOILET PAPER AND PAPER TOWEL ROLLS", // 3
+            "MIXED AND OTHER PAPER", // 4
+            "PAPER TOWELS AND TISSUES", // 5
+            "DISPOSABLE FOOD PACKAGING", // 6
+            "GLITTER PAPER", // 7
+            "CRAYON DRAWINGS", // 8
+
+            // PLASTICS
+            "PLASTIC BEVERAGE BOTTLES", // 9
+            "SHAMPOO_SOAP_DETERGENT BOTTLES", // 10
+            "PLASTIC BAGS", // 11
+            "BUBBLE WRAP", // 12
+            "PLASTIC PACKAGING", // 13
+            "REUSABLE PLASTIC CONTAINERS", // 14
+            "PACKAGING WITH FOIL", // 15
+            "MELAMINE PRODUCTS", // 16
+            "EXPIRED CREDIT CARDS", // 17
+            "CONTAMINATED PLASTIC PACKAGING", // 18
+            "TOYS", // 19
+
+            // GLASS
+            "GLASS BOTTLES AND JARS", // 20
+            "DRINKING_WINE GLASSES", // 21
+            "GLASSWARE CONTAINERS", // 22
+            "TEMPERED GLASS", // 23
+            "MIRRORS", // 24
+            "GLASS WITH METAL WIRES", // 25
+            "LIGHT BULBS", // 26
+
+            // OTHER
+            "PLANTS", // 27
+            "WOOD", // 28
+            "DIAPERS", // 29
+            "STYROFOAM", // 30
+            "PORCELAIN_CERAMICS", // 31
+            "OTHER" // 32
+        ];
+        
+        // Initialize predictions object
+        wasteTypes.forEach(type => {
+            allPredictions[type] = 0;
+        });
+        
         // Check if backend is ready
         async function checkBackend() {
             try {
@@ -530,7 +797,8 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        image: imageData
+                        image: imageData,
+                        return_all_predictions: true // Request all predictions for dashboard
                     })
                 });
                 
@@ -541,6 +809,17 @@
                 const result = await response.json();
                 
                 if (result.success) {
+                    // Update all predictions for dashboard
+                    if (result.all_predictions) {
+                        allPredictions = { ...result.all_predictions };
+                        console.log("Updated allPredictions:", allPredictions);
+                        if (isDashboardOpen) {
+                            updateDashboard();
+                        }
+                    } else {
+                        console.log("No all_predictions in response:", result);
+                    }
+                    
                     return {
                         className: result.className,
                         probability: result.probability
@@ -686,7 +965,7 @@
 
         function submitCorrection() {
             const inputValue = correctionInput.value.trim();
-            const wasteTypes = [
+            const wasteTypesForCorrection = [
                 // PAPER
                 "CARDBOARD", // 1
                 "PAPER EGG TRAYS", // 2
@@ -739,7 +1018,7 @@
             }
             
             // Convert number to waste type (array is 0-indexed, input is 1-indexed)
-            const correctedType = wasteTypes[numericInput - 1];
+            const correctedType = wasteTypesForCorrection[numericInput - 1];
             
             hideCorrectionState();
             classifyWaste(correctedType, 1.0);
@@ -952,6 +1231,104 @@
 
             classified = false;
         }
+
+        // Dashboard functions
+        function showDashboard() {
+            isDashboardOpen = true;
+            document.getElementById('dashboard-overlay').classList.add('show');
+            initializeDashboard();
+        }
+
+        function hideDashboard(event) {
+            if (event && event.target !== event.currentTarget) return;
+            isDashboardOpen = false;
+            document.getElementById('dashboard-overlay').classList.remove('show');
+        }
+
+        function initializeDashboard() {
+            const grid = document.getElementById('predictions-grid');
+            grid.innerHTML = '';
+            
+            wasteTypes.forEach((type, index) => {
+                const item = document.createElement('div');
+                item.className = 'prediction-item';
+                item.id = `prediction-${index}`;
+                
+                const displayName = type.replace(/_/g, ' / ');
+                
+                item.innerHTML = `
+                    <div class="prediction-label">
+                        <span>${displayName}</span>
+                        <span class="prediction-value" id="value-${index}">0%</span>
+                    </div>
+                    <div class="prediction-bar-container">
+                        <div class="prediction-bar" id="bar-${index}" style="width: 0%"></div>
+                    </div>
+                `;
+                
+                grid.appendChild(item);
+            });
+            
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            if (!isDashboardOpen) return;
+            
+            console.log("Updating dashboard with predictions:", allPredictions);
+            
+            // Sort predictions by value for top 5
+            const sortedPredictions = Object.entries(allPredictions)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            console.log("Top 5 predictions:", sortedPredictions);
+            
+            // Update top predictions
+            const topList = document.getElementById('top-predictions-list');
+            topList.innerHTML = sortedPredictions.map(([type, confidence]) => `
+                <div class="top-prediction-item">
+                    <span class="top-prediction-name">${type.replace(/_/g, ' / ')}</span>
+                    <span class="top-prediction-confidence">${Math.round(confidence * 100)}%</span>
+                </div>
+            `).join('');
+            
+            // Update all prediction bars
+            wasteTypes.forEach((type, index) => {
+                const confidence = allPredictions[type] || 0;
+                const percentage = Math.round(confidence * 100);
+                
+                const valueElement = document.getElementById(`value-${index}`);
+                const barElement = document.getElementById(`bar-${index}`);
+                const itemElement = document.getElementById(`prediction-${index}`);
+                
+                if (valueElement && barElement && itemElement) {
+                    valueElement.textContent = `${percentage}%`;
+                    barElement.style.width = `${percentage}%`;
+                    
+                    // Update bar color based on confidence
+                    barElement.classList.remove('high-confidence', 'medium-confidence');
+                    if (confidence > 0.7) {
+                        barElement.classList.add('high-confidence');
+                        itemElement.classList.add('active');
+                    } else if (confidence > 0.3) {
+                        barElement.classList.add('medium-confidence');
+                        itemElement.classList.remove('active');
+                    } else {
+                        itemElement.classList.remove('active');
+                    }
+                }
+            });
+        }
+
+        // Add keyboard shortcut for dashboard (press 'D')
+        document.addEventListener('keydown', function(e) {
+            if (e.key.toLowerCase() === 'd' && !isDashboardOpen) {
+                showDashboard();
+            } else if (e.key === 'Escape' && isDashboardOpen) {
+                hideDashboard();
+            }
+        });
     </script>
 </body>
 </html>

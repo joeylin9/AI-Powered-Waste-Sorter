@@ -11,19 +11,17 @@ import numpy as np
 data_dir = "dataset"
 batch_size = 32
 image_size = (224, 224)
-epochs = 40  # Increased epochs
-learning_rate = 0.0001  # Lower learning rate
+epochs = 30
+learning_rate = 0.0001
 
 # Enhanced data transforms with normalization
 train_transform = transforms.Compose([
-    transforms.Resize((256, 256)),  # Resize larger first
-    transforms.RandomResizedCrop(image_size, scale=(0.8, 1.0)),  # Better than just resize
+    transforms.Resize((256, 256)),
     transforms.RandomHorizontalFlip(p=0.5),
-    transforms.RandomRotation(degrees=15),
+    transforms.RandomRotation(degrees=360),
     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-    transforms.RandomGrayscale(p=0.1),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # ImageNet stats
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
 val_transform = transforms.Compose([
@@ -62,13 +60,9 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, 
                        num_workers=num_workers, pin_memory=pin_memory)
 
-# Better model setup
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
-
-# Use a more powerful model or properly configure ResNet18
-model = models.resnet50(weights='IMAGENET1K_V1')  # Better pretrained model
-# model = models.resnet18(weights='IMAGENET1K_V1')  # Alternative
+model = models.resnet50(weights='IMAGENET1K_V1')
 
 # Freeze early layers for better transfer learning
 for param in model.parameters():
@@ -157,7 +151,7 @@ for epoch in range(epochs):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'best_val_acc': best_val_acc,
-        }, "best_model.pt")
+        }, "model.pt")
         patience_counter = 0
         print(f"  → New best validation accuracy: {best_val_acc:.2%}")
     else:
@@ -178,5 +172,5 @@ for epoch in range(epochs):
 print(f"\nTraining completed! Best validation accuracy: {best_val_acc:.2%}")
 
 # Save final model and labels
-torch.save(model.state_dict(), "final_model.pt")
+torch.save(model.state_dict(), "model.pt")
 Path("labels.txt").write_text("\n".join(class_names))

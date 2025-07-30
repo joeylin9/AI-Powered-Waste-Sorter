@@ -75,10 +75,10 @@ class WasteSorterModel:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
     
-    def predict(self, image):
+    def predict(self, image, return_all=False):
         """Make prediction on image"""
         if self.model is None:
-            return None, 0.0
+            return None, 0.0, None
         
         try:
             # Transform image
@@ -93,10 +93,17 @@ class WasteSorterModel:
                 confidence, predicted_idx = torch.max(probabilities, 0)
                 predicted_class = self.labels[predicted_idx.item()]
                 
-                return predicted_class, confidence.item()
+                # Get all predictions if requested
+                all_predictions = None
+                if return_all:
+                    all_predictions = {}
+                    for i, label in enumerate(self.labels):
+                        all_predictions[label] = probabilities[i].item()
+                
+                return predicted_class, confidence.item(), all_predictions
         except Exception as e:
             print(f"Prediction error: {e}")
-            return None, 0.0
+            return None, 0.0, None
 
 # Initialize model
 waste_model = WasteSorterModel()
@@ -110,6 +117,9 @@ def predict():
         if 'image' not in data:
             return jsonify({'error': 'No image data provided'}), 400
         
+        # Check if all predictions are requested
+        return_all_predictions = data.get('return_all_predictions', False)
+        
         # Decode base64 image
         image_data = data['image'].split(',')[1]  # Remove data:image/png;base64, prefix
         image_bytes = base64.b64decode(image_data)
@@ -118,16 +128,22 @@ def predict():
         image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
         
         # Make prediction
-        predicted_class, confidence = waste_model.predict(image)
+        predicted_class, confidence, all_predictions = waste_model.predict(image, return_all=return_all_predictions)
         
         if predicted_class is None:
             return jsonify({'error': 'Prediction failed'}), 500
         
-        return jsonify({
+        response = {
             'className': predicted_class,
             'probability': confidence,
             'success': True
-        })
+        }
+        
+        # Add all predictions if requested
+        if return_all_predictions and all_predictions:
+            response['all_predictions'] = all_predictions
+        
+        return jsonify(response)
         
     except Exception as e:
         print(f"Error in predict endpoint: {e}")
