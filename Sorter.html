@@ -53,15 +53,22 @@
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 20vh;
             transition: all 0.3s ease;
+
+            position: fixed;
+            bottom: 6vh;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #bottom-text.result-state {
+            bottom: 12vh;
         }
 
         .result-state h1 {
-            font-size: 7vw;
+            font-size: 6vw;
             color: #2a6f97;
-            margin-bottom: 2vh;
+            margin: 2vh 0;
             max-width: 80vw;
         }
 
@@ -187,6 +194,7 @@
         .back-button.show, .wrong-button.show {
             opacity: 1;
             pointer-events: all;
+            transition: opacity 0.3s ease;
         }
 
         .back-button:hover, .wrong-button:hover {
@@ -198,6 +206,11 @@
             justify-content: center;
             align-items: center;
             margin-top: 3vh;
+
+            position: fixed;
+            bottom: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .correction-state {
@@ -535,7 +548,7 @@
 <body>
     <!-- Dashboard Tab -->
     <div class="dashboard-tab" onclick="showDashboard()">
-        📊 Live Predictions
+        Predictions
     </div>
 
     <!-- Dashboard Overlay -->
@@ -825,12 +838,12 @@
                         probability: result.probability
                     };
                 } else {
-                    alert('Prediction failed:', result.error);
+                    console.error('Prediction failed:', result.error);
                     return null;
                 }
                 
             } catch (error) {
-                alert('Prediction error:', error);
+                console.error('Prediction error:', error);
                 return null;
             }
         }
@@ -841,7 +854,7 @@
                 try {
                     const prediction = await makePrediction();
                     
-                    if (prediction && prediction.probability > 0.20) {
+                    if (prediction && prediction.probability > 0.25) {
                         currentPrediction = prediction;
                         
                         // Clear any existing reset timeout
@@ -866,7 +879,7 @@
                                             hideThinkingState();
                                             showResultState();
                                             classificationTimeout = null;
-                                        }, 2000); // 2 seconds to show thinking animation
+                                        }, 1500); // 1.5 seconds to show thinking animation
                                     }
                                     stabilityTimer = null;
                                     stabilityStartTime = null;
@@ -903,7 +916,7 @@
                     }
                     
                 } catch (error) {
-                    alert("Prediction error:", error);
+                    console.error("Prediction error:", error);
                 }
             }
             
@@ -939,6 +952,9 @@
             if (autoReturnTimer) {
                 clearTimeout(autoReturnTimer);
             }
+            
+            backButton.classList.remove('show');
+            wrongButton.classList.remove('show');   
 
             // Hide captured image when showing correction state
             const imgElem = document.getElementById('captured-image');
@@ -961,6 +977,9 @@
             if (imgElem) {
                 imgElem.style.display = 'block';
             }
+
+            backButton.classList.add('show');
+            wrongButton.classList.add('show');  
         }
 
         function submitCorrection() {
@@ -1034,6 +1053,7 @@
         let autoReturnTimer = null;
         
         function classifyWaste(type, confidence = 0.7) {
+            document.getElementById('bottom-text').classList.add('result-state');
             backButton.classList.add('show');
             wrongButton.classList.add('show');
 
@@ -1212,6 +1232,7 @@
             hideCorrectionState();
 
             // Hide buttons
+            document.getElementById('bottom-text').classList.remove('result-state');
             backButton.classList.remove('show');
             wrongButton.classList.remove('show');
 
