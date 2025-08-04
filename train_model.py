@@ -153,7 +153,7 @@ def train():
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'best_val_acc': best_val_acc,
-            }, "test_model.pt")
+            }, "model.pt")
             patience_counter = 0
             print(f"  → New best validation accuracy: {best_val_acc:.2%}")
         else:
@@ -174,7 +174,7 @@ def train():
     print(f"\nTraining completed! Best validation accuracy: {best_val_acc:.2%}")
 
     # Save final model and labels
-    torch.save(model.state_dict(), "test_model.pt")
+    torch.save(model.state_dict(), "model.pt")
     Path("labels.txt").write_text("\n".join(class_names))
 
 if __name__ == '__main__':
