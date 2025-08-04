@@ -126,17 +126,17 @@
         <div class="input-section">
             <input type="text" class="correction-input" id="correction-input" placeholder="Enter number (1-32)"/>
             <div class="correction-button-section">
-                <button class="correction-back-button" id="correction-back-button" onclick="hideCorrectionState()">Back</button>
-                <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction</button>
+                <button class="correction-back-button" id="correction-back-button" onclick="hideCorrectionState()">Back (-)</button>
+                <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction (+)</button>
             </div>
         </div>
     </div>
 
-    <button class="back-button" id="back-button" onclick="resetToHomeScreen()">←</button>
+    <button class="back-button" id="back-button" onclick="resetToHomeScreen()">← <span style="font-size: 1.2vw;"> (9)</span></button>
 
     <div class="button-container">
-        <button class="yes-button" id="yes-button" onclick="resetToHomeScreen()">Yes</button>
-        <button class="no-button" id="no-button" onclick="showCorrectionState()">No</button>
+        <button class="yes-button" id="yes-button" onclick="resetToHomeScreen()">Yes (-)</button>
+        <button class="no-button" id="no-button" onclick="showCorrectionState()">No (+)</button>
     </div>
 </body>
 </html>

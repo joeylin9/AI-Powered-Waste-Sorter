@@ -328,12 +328,12 @@ function hideCorrectionState() {
 function submitCorrection() {
     const inputValue = correctionInput.value.trim();
     
-    // Check if input is a number between 1-32
+    // Check if input is a number between 1-34
     const numericInput = parseInt(inputValue);
-    if (isNaN(numericInput) || numericInput < 1 || numericInput > 32) {
+    if (isNaN(numericInput) || numericInput < 1 || numericInput > 34) {
         correctionInput.classList.add('input-error');
         correctionInput.value = '';
-        correctionInput.placeholder = 'Enter a number 1-32!';
+        correctionInput.placeholder = 'Enter a number 1-34!';
         correctionInput.focus();
         return;
     }
@@ -650,11 +650,43 @@ function updateDashboard() {
     });
 }
 
-// Add keyboard shortcut for dashboard (press 'D')
-document.addEventListener('keydown', function(e) {
-    if (e.key.toLowerCase() === 'd' && !isDashboardOpen) {
-        showDashboard();
-    } else if (e.key === 'Escape' && isDashboardOpen) {
-        hideDashboard();
+document.addEventListener('keydown', function (e) {
+    const correctionStateActive = correctionState.classList.contains('show');
+    const inputFocused = document.activeElement === correctionInput;
+    
+    if (correctionStateActive && inputFocused) {
+        switch (e.key) {
+            case '-':
+            case '_':
+                e.preventDefault(); // Prevent character from being typed
+                document.getElementById('correction-back-button').click();
+                return;
+            case '+':
+            case '=':
+                e.preventDefault(); // Prevent character from being typed
+                submitCorrection();
+                return;
+        }
+        return;
+    }
+    
+    switch (e.key) {
+        case '-':
+        case '_':
+            if (yesButton.classList.contains('show')) {
+                e.preventDefault();
+                yesButton.click();
+            }
+            break;
+        case '+':
+        case '=':
+            if (noButton.classList.contains('show')) {
+                e.preventDefault();
+                noButton.click();
+            }
+            break;
+        case '9':
+            if (backButton.classList.contains('show')) backButton.click();
+            break;
     }
 });
