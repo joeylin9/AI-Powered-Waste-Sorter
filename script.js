@@ -44,7 +44,7 @@ const wasteTypes = [
 
     // PLASTICS
     "PLASTIC BEVERAGE BOTTLES", // 9
-    "SHAMPOO_SOAP_DETERGENT BOTTLES", // 10
+    "SHAMPOO/SOAP/DETERGENT BOTTLES", // 10
     "PLASTIC BAGS", // 11
     "BUBBLE WRAP", // 12
     "PLASTIC PACKAGING", // 13
@@ -335,7 +335,7 @@ function submitCorrection() {
 
         // PLASTICS
         "PLASTIC BEVERAGE BOTTLES", // 9
-        "SHAMPOO_SOAP_DETERGENT BOTTLES", // 10
+        "SHAMPOO/SOAP/DETERGENT BOTTLES", // 10
         "PLASTIC BAGS", // 11
         "BUBBLE WRAP", // 12
         "PLASTIC PACKAGING", // 13
@@ -452,7 +452,7 @@ function classifyWaste(type, confidence) {
         case "PLASTIC BEVERAGE BOTTLES":
             instruction = "Plastic beverage bottles are recyclable, please place them in the plastic bin.";
             break;
-        case "SHAMPOO_SOAP_DETERGENT BOTTLES":
+        case "SHAMPOO/SOAP/DETERGENT BOTTLES":
             instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
             break;
         case "PLASTIC BAGS":
@@ -532,18 +532,8 @@ function classifyWaste(type, confidence) {
     document.getElementById('main-title').textContent = type;
     document.getElementById('byline').textContent = instruction;
 
-    // Create and display confidence information
-    const confidencePercent = Math.round(confidence * 100);
     const bottomText = document.getElementById('bottom-text');
-    bottomText.innerHTML = `
-        <div class="confidence-display">
-            Confidence: 
-            <div class="confidence-bar">
-                <div class="confidence-level" style="width: ${confidencePercent}%"></div>
-            </div>
-            ${confidencePercent}%
-        </div>
-    `;
+    bottomText.innerHTML = 'Is the classification correct?';
 
     classified = true;
 }
