@@ -5,8 +5,9 @@ const topText = document.getElementById('top-text');
 const loadingState = document.getElementById('loading-state');
 const correctionState = document.getElementById('correction-state');
 const correctionInput = document.getElementById('correction-input');
+const yesButton = document.getElementById('yes-button');
+const noButton = document.getElementById('no-button');
 const backButton = document.getElementById('back-button');
-const wrongButton = document.getElementById('wrong-button');
 
 let type = "";
 let classified = false;
@@ -211,7 +212,7 @@ async function predictionLoop() {
                                     hideThinkingState();
                                     showResultState();
                                     classificationTimeout = null;
-                                }, 1500); // 1.5 seconds to show thinking animation
+                                }, 1000); // 1 second to show thinking animation
                             }
                             stabilityTimer = null;
                             stabilityStartTime = null;
@@ -290,9 +291,10 @@ function showCorrectionState() {
     if (autoReturnTimer) {
         clearTimeout(autoReturnTimer);
     }
-    
+
     backButton.classList.remove('show');
-    wrongButton.classList.remove('show');   
+    yesButton.classList.remove('show');
+    noButton.classList.remove('show');   
 
     // Hide captured image when showing correction state
     const imgElem = document.getElementById('captured-image');
@@ -318,7 +320,8 @@ function hideCorrectionState() {
     }
 
     backButton.classList.add('show');
-    wrongButton.classList.add('show');  
+    yesButton.classList.add('show');
+    noButton.classList.add('show');  
     topText.classList.add('show');
 }
 
@@ -354,11 +357,12 @@ document.getElementById('correction-input').addEventListener('keypress', functio
 
 let autoReturnTimer = null;
 
-function classifyWaste(type, confidence) {
+function classifyWaste(type) {
     document.getElementById('bottom-text').classList.add('result-state');
-    topText.classList.add('show');
     backButton.classList.add('show');
-    wrongButton.classList.add('show');
+    topText.classList.add('show');
+    yesButton.classList.add('show');
+    noButton.classList.add('show');
 
     if (autoReturnTimer) {
         clearTimeout(autoReturnTimer);
@@ -412,7 +416,7 @@ function classifyWaste(type, confidence) {
             instruction = "Glitter paper is not practical to recycle as it is very difficult to separate the non-paper layer. Please place it in the waste bin.";
             break;
         case "CRAYON DRAWING":
-            instruction = "During recycling, paper is broken down by water, but crayon wax prevents the process and thus makes the item unrecyclable. Please place it in the waste bin.";
+            instruction = "Crayon wax prevents water from breaking down paper, so it can't be recycled. Please place it in the waste bin.";
             break;
         
         // PLASTICS
@@ -533,7 +537,8 @@ function resetToHomeScreen() {
     // Hide buttons
     document.getElementById('bottom-text').classList.remove('result-state');
     backButton.classList.remove('show');
-    wrongButton.classList.remove('show');
+    yesButton.classList.remove('show');
+    noButton.classList.remove('show');
     topText.classList.remove('show');
 
     // Reset to initial state

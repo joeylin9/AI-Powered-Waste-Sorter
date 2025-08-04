@@ -19,7 +19,6 @@ body {
 
 .title-container {
     text-align: center;
-    transition: all 0.3s ease;
     margin-top: 0;
 }
 
@@ -37,7 +36,6 @@ h1 {
     color: #333;
     margin-top: 1vh;
     font-weight: 400;
-    transition: all 0.3s ease;
 }
 
 .bottom-text {
@@ -46,12 +44,30 @@ h1 {
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
-    transition: all 0.3s ease;
 
     position: fixed;
     bottom: 6vh;
     left: 50%;
     transform: translateX(-50%);
+}
+
+.back-button{
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    font-size: 2vw;
+    position: fixed;
+    top: 2vh;
+    left: 1vw;
+    text-decoration: none;
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+
+.back-button.show {
+    opacity: 1;
+    pointer-events: all;
 }
 
 #bottom-text.result-state {
@@ -64,6 +80,7 @@ h1 {
     font-size: 6vw;
     color: #2a6f97;
     max-width: 80vw;
+    margin-top: 7vh;
 }
 
 .top-text {
@@ -72,7 +89,6 @@ h1 {
     font-weight: normal;
     text-align: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
     margin-top: 2vh;
     margin-bottom: -1vh;
 }
@@ -91,7 +107,6 @@ h1 {
     font-size: 1.4vw;
     color: #333;
     font-weight: normal;
-    max-width: 80vw;
     border-radius: 1.4vw;
     padding: 2vh 2vw;
     margin-top: 2vh;
@@ -123,16 +138,14 @@ h1 {
 }
 
 .home-content {
-    transition: opacity 0.3s ease;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    margin-top: -2vh;
+    align-items:center;
+    margin-top: -8vh;
 }
 
 .home-content .top-text {
     opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
 .home-content.show {
@@ -150,7 +163,6 @@ h1 {
     flex-direction: column;
     align-items: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
     position: absolute;
     top: 60%;
     left: 50%;
@@ -158,6 +170,7 @@ h1 {
 }
 
 .loading-state.show {
+    transition: opacity 0.3s ease;
     opacity: 1;
 }
 
@@ -205,7 +218,7 @@ h1 {
     margin-top: 1vh;
 }
 
-.back-button, .wrong-button {
+.yes-button, .no-button {
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
@@ -218,13 +231,12 @@ h1 {
     margin: 0px 1vw;
 }
 
-.back-button.show, .wrong-button.show {
+.yes-button.show, .no-button.show {
     opacity: 1;
     pointer-events: all;
-    transition: opacity 0.3s ease;
 }
 
-.back-button:hover, .wrong-button:hover {
+.yes-button:hover, .no-button:hover {
     background: #f4f4f4;
 }
 
@@ -244,25 +256,20 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    pointer-events: none;
-    width: 90vw;
-    max-width: 1200px;
-    background: white;
-    border-radius: 2vw;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    width: 90%;
+    height: 100%;
     padding: 3vh 2vw;
-    max-height: 85vh;
+    margin-top: 8vh;
     overflow-y: auto;
 }
 
 .correction-state.show {
-    opacity: 1;
+    display: block;
     pointer-events: all;
 }
 
@@ -286,7 +293,6 @@ h1 {
     cursor: pointer;
     font-size: 1.2vw;
     padding: 1vh 2vw;
-    transition: background-color 0.3s ease;
     border: 1px solid #2a6f97;
     border-radius: 1vw;
     background: white;
@@ -352,20 +358,25 @@ h1 {
 }
 
 .waste-type-item {
+    display: flex;
+    align-items: flex-start;
     padding: 0.4vh 1vw;
     border-radius: 0.5vw;
     background-color: white;
     border: 1px solid #dee2e6;
     font-size: 0.9vw;
-    transition: background-color 0.2s ease;
 }
 
 .waste-type-number {
+    flex: 0 0 auto;
     font-weight: bold;
     color: #2a6f97;
     margin-right: 0.5vw;
-    display: inline-block;
     width: 2vw;
+}
+
+.waste-type-label {
+    flex: 1;
 }
 
 .input-section {
@@ -390,7 +401,6 @@ h1 {
     font-size: 1vw;
     font-weight: 500;
     z-index: 1000;
-    transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(42, 111, 151, 0.3);
 }
 
@@ -408,13 +418,11 @@ h1 {
     height: 100vh;
     background: rgba(0, 0, 0, 0.8);
     z-index: 2000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
+    display: none;
 }
 
 .dashboard-overlay.show {
-    opacity: 1;
+    display: block;
     pointer-events: all;
 }
 
@@ -430,7 +438,6 @@ h1 {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     overflow-y: auto;
     transform: scale(0.9) translateY(-50px);
-    transition: all 0.3s ease;
 }
 
 .dashboard-overlay.show .dashboard-panel {
@@ -461,7 +468,6 @@ h1 {
     cursor: pointer;
     font-size: 1.2vw;
     color: #666;
-    transition: all 0.2s ease;
 }
 
 .dashboard-close:hover {
@@ -481,7 +487,6 @@ h1 {
     border-radius: 1vw;
     padding: 1vh 1.5vw;
     border: 2px solid #e9ecef;
-    transition: all 0.2s ease;
 }
 
 .prediction-item.active {
@@ -520,7 +525,6 @@ h1 {
     height: 100%;
     background: linear-gradient(90deg, #2a6f97, #4a8bc2);
     border-radius: 0.4vh;
-    transition: width 0.3s ease;
     min-width: 1px;
 }
 
