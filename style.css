@@ -132,30 +132,6 @@ h1 {
     background: rgba(214, 214, 214, 0.8);
 }
 
-.confidence-display {
-    font-size: 1.2vw;
-    margin-top: 1vh;
-    color: #555;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.confidence-bar {
-    width: 15vw;
-    height: 1vh;
-    background-color: #e0e0e0;
-    border-radius: 0.5vh;
-    margin: 0 1vw;
-    overflow: hidden;
-}
-
-.confidence-level {
-    height: 100%;
-    background-color: #2a6f97;
-    border-radius: 0.5vh;
-}
-
 .home-content {
     display: flex;
     flex-direction: column;
@@ -166,11 +142,6 @@ h1 {
 
 .home-content .top-text {
     opacity: 0;
-}
-
-.home-content.show {
-    opacity: 1;
-    margin-top: 0;
 }
 
 .home-content.hide {
@@ -406,6 +377,66 @@ h1 {
     border-top: 2px solid #e9ecef;
 }
 
+.category-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2vw;
+    width: 100%;
+    margin-bottom: 3vh;
+}
+
+.main-category-item {
+    background: #f8f9fa;
+    border-radius: 1vw;
+    padding: 2vh 2vw;
+    border: 2px solid #e9ecef;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.main-category-number {
+    font-size: 2vw;
+    font-weight: bold;
+    color: #2a6f97;
+    margin-bottom: 1vh;
+}
+
+.main-category-name {
+    font-size: 1.4vw;
+    font-weight: 600;
+    color: #2a6f97;
+    margin-bottom: 1vh;
+    background: #2a6f97;
+    color: white;
+    padding: 0.5vh 1vw;
+    border-radius: 0.5vw;
+}
+
+.main-category-description {
+    font-size: 0.9vw;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Update the input error styling */
+.correction-input.input-error {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Make sure the correction state scrolling works properly */
+.correction-state {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 /* Dashboard Styles */
 .dashboard-tab {
     position: fixed;
@@ -420,12 +451,6 @@ h1 {
     font-weight: 500;
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(42, 111, 151, 0.3);
-}
-
-.dashboard-tab:hover {
-    background: #1a4f6f;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(42, 111, 151, 0.4);
 }
 
 .dashboard-overlay {
@@ -486,11 +511,6 @@ h1 {
     cursor: pointer;
     font-size: 1.2vw;
     color: #666;
-}
-
-.dashboard-close:hover {
-    background: #e9ecef;
-    color: #333;
 }
 
 .predictions-grid {

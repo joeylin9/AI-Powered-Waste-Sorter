@@ -9,17 +9,12 @@ const yesButton = document.getElementById('yes-button');
 const noButton = document.getElementById('no-button');
 const backButton = document.getElementById('back-button');
 const dottedOutline = document.querySelector('.dotted-outline');
-
-let type = "";
 let classified = false;
 let isThinking = false;
-let classificationTimeout = null;
-let resetTimeout = null;
+let isCountingDown = false;
 
-// Stability timer variables
-let stabilityTimer = null;
-let stabilityStartTime = null;
-let lastStablePrediction = null;
+let correctionStep = 1; // 1 for category selection, 2 for item selection
+let selectedCategoryIndex = null;
 
 // API endpoint for your PyTorch model
 const API_ENDPOINT = 'http://localhost:5000/predict';
@@ -77,6 +72,63 @@ const wasteTypes = [
     "OTHER" // 34
 ];
 
+const wasteCategories = {
+    "PAPER": {
+        number: 1,
+        items: [
+            "CARDBOARD",
+            "PAPER EGG TRAY",
+            "TOILET / PAPER TOWEL ROLL",
+            "MIXED OR OTHER PAPER",
+            "PAPER TOWEL OR TISSUE",
+            "DISPOSABLE FOOD PACKAGING",
+            "RECEIPT",
+            "DRINK CARTON",
+            "GLITTER PAPER",
+            "CRAYON DRAWING"
+        ]
+    },
+    "PLASTICS": {
+        number: 2,
+        items: [
+            "PLASTIC BEVERAGE BOTTLE",
+            "TOILETRY / DETERGENT BOTTLE",
+            "PLASTIC BAG",
+            "BUBBLE WRAP",
+            "PLASTIC PACKAGING",
+            "REUSABLE PLASTIC CONTAINER",
+            "PACKAGING WITH FOIL",
+            "MELAMINE PRODUCT",
+            "CREDIT CARD",
+            "DIRTY PLASTIC PACKAGING",
+            "TOY"
+        ]
+    },
+    "GLASS": {
+        number: 3,
+        items: [
+            "GLASS BOTTLE OR JAR",
+            "DRINKING OR WINE GLASS",
+            "GLASSWARE CONTAINER",
+            "TEMPERED GLASS",
+            "MIRROR",
+            "GLASS WITH METAL WIRES",
+            "LIGHT BULB"
+        ]
+    },
+    "OTHER": {
+        number: 4,
+        items: [
+            "PLANT",
+            "WOOD",
+            "DIAPER",
+            "STYROFOAM",
+            "PORCELAIN OR CERAMIC",
+            "OTHER"
+        ]
+    }
+};
+
 // Initialize predictions object
 wasteTypes.forEach(type => {
     allPredictions[type] = 0;
@@ -131,84 +183,6 @@ function captureFrame() {
     return canvas.toDataURL('image/png');
 }
 
-// // Prediction loop
-// async function predictionLoop() {
-//     if (isModelReady) {
-//         try {
-//             const prediction = await makePrediction();
-            
-//             if (prediction && prediction.probability > 0.25) {
-//                 currentPrediction = prediction;
-                
-//                 // Clear any existing reset timeout
-//                 if (resetTimeout) {
-//                     clearTimeout(resetTimeout);
-//                     resetTimeout = null;
-//                 }
-                
-//                 // If not already classified and not thinking
-//                 if (!classified && !isThinking) {
-//                     // Start or continue stability timer
-//                     if (!stabilityTimer) {
-//                         // Start new stability timer
-//                         stabilityStartTime = Date.now();
-//                         lastStablePrediction = prediction;
-                        
-//                         stabilityTimer = setTimeout(() => {
-//                             // After 0.5 seconds of stable detection, start thinking
-//                             if (lastStablePrediction && !classified && !isThinking) {
-//                                 showThinkingState();
-//                                 classificationTimeout = setTimeout(() => {
-//                                     hideThinkingState();
-//                                     showResultState();
-//                                     classificationTimeout = null;
-//                                 }, 1000); // 1 second to show thinking animation
-//                             }
-//                             stabilityTimer = null;
-//                             stabilityStartTime = null;
-//                             lastStablePrediction = null;
-//                         }, 500); // 0.5 second stability requirement
-//                     } else {
-//                         // Update the stable prediction (timer is already running)
-//                         lastStablePrediction = prediction;
-//                     }
-//                 }
-                
-//             } else {
-//                 // Low confidence detection
-//                 currentPrediction = null;
-                
-//                 // Clear stability timer if running
-//                 if (stabilityTimer) {
-//                     clearTimeout(stabilityTimer);
-//                     stabilityTimer = null;
-//                     stabilityStartTime = null;
-//                     lastStablePrediction = null;
-//                 }
-                
-//                 // Clear classification timeout if pending
-//                 if (classificationTimeout) {
-//                     clearTimeout(classificationTimeout);
-//                     classificationTimeout = null;
-//                 }
-                
-//                 // Hide thinking state if showing
-//                 if (isThinking) {
-//                     hideThinkingState();
-//                 }
-//             }
-            
-//         } catch (error) {
-//             console.error("Prediction error:", error);
-//         }
-//     }
-    
-//     // Continue the prediction loop with a small delay to avoid overwhelming the server
-//     setTimeout(() => {
-//         window.requestAnimationFrame(predictionLoop);
-//     }, 100); // 100ms delay between predictions
-// }
-
 function showThinkingState() {
     if (isThinking) return;
     
@@ -233,15 +207,11 @@ function showResultState() {
     document.getElementById('confidence-percentage').textContent = `${confidencePercent}%`;
     
     topText.classList.add('show');
-    type = currentPrediction.className.toUpperCase();
+    type = currentPrediction.className;
     classifyWaste(type, confidence);
 }
 
 function showCorrectionState() {
-    if (autoReturnTimer) {
-        clearTimeout(autoReturnTimer);
-    }
-
     backButton.classList.remove('show');
     yesButton.classList.remove('show');
     noButton.classList.remove('show');   
@@ -256,56 +226,159 @@ function showCorrectionState() {
 
     topText.classList.remove('show');
     homeContent.classList.add('hide');
+    
+    // Reset to step 1 and show category selection
+    correctionStep = 1;
+    selectedCategoryIndex = null;
+    showCategorySelection();
+    
     correctionState.classList.add('show');
     correctionInput.value = '';
     correctionInput.focus();
 }
 
-function hideCorrectionState() {
-    correctionState.classList.remove('show');
-    homeContent.classList.remove('hide');
-    const imgElem = document.getElementById('captured-image');
-    if (imgElem) {
-        imgElem.style.display = 'block';
-    }
+function showCategorySelection() {
+    const correctionTitle = document.querySelector('.correction-title');
+    const correctionSubtitle = document.querySelector('.correction-subtitle');
+    const categoriesContainer = document.querySelector('.categories-container');
+    
+    correctionTitle.textContent = "Select the main category";
+    correctionSubtitle.textContent = "Please enter the number corresponding to the main waste category";
+    
+    categoriesContainer.innerHTML = `
+        <div class="category-selection-grid">
+            <div class="main-category-item">
+                <div class="main-category-number">1.</div>
+                <div class="main-category-name">PAPER</div>
+                <div class="main-category-description">Cardboard, receipts, paper packaging, etc.</div>
+            </div>
+            <div class="main-category-item">
+                <div class="main-category-number">2.</div>
+                <div class="main-category-name">PLASTICS</div>
+                <div class="main-category-description">Bottles, bags, containers, packaging, etc.</div>
+            </div>
+            <div class="main-category-item">
+                <div class="main-category-number">3.</div>
+                <div class="main-category-name">GLASS</div>
+                <div class="main-category-description">Bottles, jars, drinking glasses, etc.</div>
+            </div>
+            <div class="main-category-item">
+                <div class="main-category-number">4.</div>
+                <div class="main-category-name">OTHER</div>
+                <div class="main-category-description">Wood, plants, ceramics, styrofoam, etc.</div>
+            </div>
+        </div>
+    `;
+    
+    // Update input placeholder
+    correctionInput.placeholder = "Enter number (1-4)";
+    
+    // Update button text
+    document.getElementById('submit-button').textContent = "Next (+)";
+}
 
-    backButton.classList.add('show');
-    yesButton.classList.add('show');
-    noButton.classList.add('show');  
-    topText.classList.add('show');
+function showItemSelection(categoryName) {
+    const correctionTitle = document.querySelector('.correction-title');
+    const correctionSubtitle = document.querySelector('.correction-subtitle');
+    const categoriesContainer = document.querySelector('.categories-container');
+    
+    correctionTitle.textContent = `Select the specific ${categoryName.toLowerCase()} item`;
+    correctionSubtitle.textContent = "Please enter the number corresponding to your specific item";
+    
+    const category = wasteCategories[categoryName];
+    const itemsHtml = category.items.map((item, index) => `
+        <div class="waste-type-item">
+            <span class="waste-type-number">${index + 1}.</span>
+            <span class="waste-type-label">${item}</span>
+        </div>
+    `).join('');
+    
+    categoriesContainer.innerHTML = `
+        <div class="category-section">
+            <div class="waste-category">${categoryName}</div>
+            <div class="waste-type-list">
+                ${itemsHtml}
+            </div>
+        </div>
+    `;
+    
+    // Update input placeholder
+    correctionInput.placeholder = `Enter number (1-${category.items.length})`;
+    correctionInput.value = '';
+    correctionInput.focus();
+    
+    // Update button text
+    document.getElementById('submit-button').textContent = "Submit Correction (+)";
+}
+
+function hideCorrectionState() {
+    if (correctionStep === 1) {
+        correctionState.classList.remove('show');
+        homeContent.classList.remove('hide');
+        const imgElem = document.getElementById('captured-image');
+        if (imgElem) {
+            imgElem.style.display = 'block';
+        }
+
+        backButton.classList.add('show');
+        yesButton.classList.add('show');
+        noButton.classList.add('show');  
+        topText.classList.add('show');
+
+        selectedCategoryIndex = null;
+    } else {
+        showCorrectionState();
+    }
 }
 
 function submitCorrection() {
     const inputValue = correctionInput.value.trim();
-    
-    // Check if input is a number between 1-34
     const numericInput = parseInt(inputValue);
-    if (isNaN(numericInput) || numericInput < 1 || numericInput > 34) {
-        correctionInput.classList.add('input-error');
-        correctionInput.value = '';
-        correctionInput.placeholder = 'Enter a number 1-34!';
-        correctionInput.focus();
-        return;
+    
+    if (correctionStep === 1) {
+        // Category selection step
+        if (isNaN(numericInput) || numericInput < 1 || numericInput > 4) {
+            correctionInput.classList.add('input-error');
+            correctionInput.value = '';
+            correctionInput.placeholder = 'Enter a number 1-4!';
+            correctionInput.focus();
+            return;
+        }
+        
+        // Find the selected category
+        const categoryNames = Object.keys(wasteCategories);
+        const selectedCategory = categoryNames.find(cat => wasteCategories[cat].number === numericInput);
+        
+        selectedCategoryIndex = numericInput;
+        correctionStep = 2;
+        
+        // Show item selection for this category
+        showItemSelection(selectedCategory);
+        
+    } else if (correctionStep === 2) {
+        // Item selection step
+        const categoryNames = Object.keys(wasteCategories);
+        const selectedCategory = categoryNames.find(cat => wasteCategories[cat].number === selectedCategoryIndex);
+        const category = wasteCategories[selectedCategory];
+        
+        if (isNaN(numericInput) || numericInput < 1 || numericInput > category.items.length) {
+            correctionInput.classList.add('input-error');
+            correctionInput.value = '';
+            correctionInput.placeholder = `Enter a number 1-${category.items.length}!`;
+            correctionInput.focus();
+            return;
+        }
+        
+        // Get the selected waste type
+        const correctedType = category.items[numericInput - 1];
+        
+        // Update confidence text to show 100% for corrected items
+        document.getElementById('confidence-percentage').textContent = "100%";
+        
+        hideCorrectionState();
+        classifyWaste(correctedType, 1.0);
     }
-    
-    // Convert number to waste type (array is 0-indexed, input is 1-indexed)
-    const correctedType = wasteTypes[numericInput - 1];
-    
-    // Update confidence text to show 100% for corrected items
-    document.getElementById('confidence-percentage').textContent = "100%";
-    
-    hideCorrectionState();
-    classifyWaste(correctedType, 1.0);
 }
-
-// Add Enter key support for correction input
-document.getElementById('correction-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        submitCorrection();
-    }
-});
-
-let autoReturnTimer = null;
 
 async function makePrediction() {
     if (!isModelReady || video.readyState !== 4) return null;
@@ -369,6 +442,7 @@ async function startManualClassification() {
     imgElem.style.display = 'none';
     
     // Update header and byline for countdown
+    isCountingDown = true;
     document.getElementById('main-title').textContent = "3";
     document.getElementById('main-title').style.marginTop = '4vh';
     document.getElementById('byline').textContent = "Hold the item up to the camera";
@@ -453,10 +527,6 @@ function classifyWaste(type) {
     yesButton.classList.add('show');
     noButton.classList.add('show');
     dottedOutline.classList.remove('show');
-
-    if (autoReturnTimer) {
-        clearTimeout(autoReturnTimer);
-    }
 
     // Capture the current video frame and display as image
     const videoElem = document.getElementById('camera-view');
@@ -603,25 +673,6 @@ function resetToHomeScreen() {
     if (!classified) return;
     document.getElementById('main-title').style.marginTop = '0';
 
-    // Clear all timers
-    if (stabilityTimer) {
-        clearTimeout(stabilityTimer);
-        stabilityTimer = null;
-        stabilityStartTime = null;
-        lastStablePrediction = null;
-    }
-
-    if (classificationTimeout) {
-        clearTimeout(classificationTimeout);
-        classificationTimeout = null;
-    }
-
-    // Clear auto-return timer if it exists
-    if (autoReturnTimer) {
-        clearTimeout(autoReturnTimer);
-        autoReturnTimer = null;
-    }
-
     // Hide all states
     hideCorrectionState();
 
@@ -637,6 +688,7 @@ function resetToHomeScreen() {
     document.getElementById('main-title').textContent = "AI Waste Sorter";
     document.getElementById('byline').textContent = "by Vidacity";
     document.getElementById('bottom-text').innerHTML = '1. Press <b>ENTER</b> to start classification &nbsp;&nbsp; 2. Hold the item up to the camera &nbsp;&nbsp; 3. Follow the instructions!';
+    isCountingDown = false;
     
     // Reset confidence text to default
     document.getElementById('confidence-percentage').textContent = "";
@@ -760,8 +812,8 @@ document.addEventListener('keydown', function (e) {
     }
 
     if (e.key === 'Enter' && !classified && !homeContent.classList.contains('hide')) {
-        console.log("Starting manual classification...");
         e.preventDefault();
+        if (isCountingDown) return;
         startManualClassification();
         return;
     }
