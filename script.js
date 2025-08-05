@@ -8,6 +8,7 @@ const correctionInput = document.getElementById('correction-input');
 const yesButton = document.getElementById('yes-button');
 const noButton = document.getElementById('no-button');
 const backButton = document.getElementById('back-button');
+const dottedOutline = document.querySelector('.dotted-outline');
 
 let type = "";
 let classified = false;
@@ -36,7 +37,7 @@ const wasteTypes = [
     // PAPER
     "CARDBOARD", // 1
     "PAPER EGG TRAY", // 2
-    "TOILET PAPER OR PAPER TOWEL ROLL", // 3
+    "TOILET / PAPER TOWEL ROLL", // 3
     "MIXED OR OTHER PAPER", // 4
     "PAPER TOWEL OR TISSUE", // 5
     "DISPOSABLE FOOD PACKAGING", // 6
@@ -47,7 +48,7 @@ const wasteTypes = [
 
     // PLASTICS
     "PLASTIC BEVERAGE BOTTLE", // 11
-    "SHAMPOO, SOAP, OR DETERGENT BOTTLE", // 12
+    "TOILETRY / DETERGENT BOTTLE", // 12
     "PLASTIC BAG", // 13
     "BUBBLE WRAP", // 14
     "PLASTIC PACKAGING", // 15
@@ -55,7 +56,7 @@ const wasteTypes = [
     "PACKAGING WITH FOIL", // 17
     "MELAMINE PRODUCT", // 18
     "CREDIT CARD", // 19
-    "CONTAMINATED PLASTIC PACKAGING", // 20
+    "DIRTY PLASTIC PACKAGING", // 20
     "TOY", // 21
 
     // GLASS
@@ -104,160 +105,109 @@ window.addEventListener('DOMContentLoaded', checkBackend);
 
 // Start camera
 function startCamera() {
+    if (video.srcObject) return;
+
     navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => { 
+        .then(stream => {
             video.srcObject = stream;
             video.style.display = 'block';
-            
-            // Start prediction loop once camera is ready
-            video.onloadeddata = () => {
-                console.log("Video ready, starting prediction loop");
-                predictionLoop();
-            };
         })
         .catch(err => {
             alert("Camera access error: ", err);
         });
 }
 
-// Convert video frame to base64 image
 function captureFrame() {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
+
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
     return canvas.toDataURL('image/png');
 }
 
-// Make prediction using PyTorch backend
-async function makePrediction() {
-    if (!isModelReady || video.readyState !== 4) return null;
-    
-    try {
-        const imageData = captureFrame();
-        
-        const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                image: imageData,
-                return_all_predictions: true // Request all predictions for dashboard
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Update all predictions for dashboard
-            if (result.all_predictions) {
-                allPredictions = { ...result.all_predictions };
-                console.log("Updated allPredictions:", allPredictions);
-                if (isDashboardOpen) {
-                    updateDashboard();
-                }
-            } else {
-                console.log("No all_predictions in response:", result);
-            }
+// // Prediction loop
+// async function predictionLoop() {
+//     if (isModelReady) {
+//         try {
+//             const prediction = await makePrediction();
             
-            return {
-                className: result.className,
-                probability: result.probability
-            };
-        } else {
-            console.error('Prediction failed:', result.error);
-            return null;
-        }
-        
-    } catch (error) {
-        console.error('Prediction error:', error);
-        return null;
-    }
-}
-
-// Prediction loop
-async function predictionLoop() {
-    if (isModelReady) {
-        try {
-            const prediction = await makePrediction();
-            
-            if (prediction && prediction.probability > 0.25) {
-                currentPrediction = prediction;
+//             if (prediction && prediction.probability > 0.25) {
+//                 currentPrediction = prediction;
                 
-                // Clear any existing reset timeout
-                if (resetTimeout) {
-                    clearTimeout(resetTimeout);
-                    resetTimeout = null;
-                }
+//                 // Clear any existing reset timeout
+//                 if (resetTimeout) {
+//                     clearTimeout(resetTimeout);
+//                     resetTimeout = null;
+//                 }
                 
-                // If not already classified and not thinking
-                if (!classified && !isThinking) {
-                    // Start or continue stability timer
-                    if (!stabilityTimer) {
-                        // Start new stability timer
-                        stabilityStartTime = Date.now();
-                        lastStablePrediction = prediction;
+//                 // If not already classified and not thinking
+//                 if (!classified && !isThinking) {
+//                     // Start or continue stability timer
+//                     if (!stabilityTimer) {
+//                         // Start new stability timer
+//                         stabilityStartTime = Date.now();
+//                         lastStablePrediction = prediction;
                         
-                        stabilityTimer = setTimeout(() => {
-                            // After 0.5 seconds of stable detection, start thinking
-                            if (lastStablePrediction && !classified && !isThinking) {
-                                showThinkingState();
-                                classificationTimeout = setTimeout(() => {
-                                    hideThinkingState();
-                                    showResultState();
-                                    classificationTimeout = null;
-                                }, 1000); // 1 second to show thinking animation
-                            }
-                            stabilityTimer = null;
-                            stabilityStartTime = null;
-                            lastStablePrediction = null;
-                        }, 500); // 0.5 second stability requirement
-                    } else {
-                        // Update the stable prediction (timer is already running)
-                        lastStablePrediction = prediction;
-                    }
-                }
+//                         stabilityTimer = setTimeout(() => {
+//                             // After 0.5 seconds of stable detection, start thinking
+//                             if (lastStablePrediction && !classified && !isThinking) {
+//                                 showThinkingState();
+//                                 classificationTimeout = setTimeout(() => {
+//                                     hideThinkingState();
+//                                     showResultState();
+//                                     classificationTimeout = null;
+//                                 }, 1000); // 1 second to show thinking animation
+//                             }
+//                             stabilityTimer = null;
+//                             stabilityStartTime = null;
+//                             lastStablePrediction = null;
+//                         }, 500); // 0.5 second stability requirement
+//                     } else {
+//                         // Update the stable prediction (timer is already running)
+//                         lastStablePrediction = prediction;
+//                     }
+//                 }
                 
-            } else {
-                // Low confidence detection
-                currentPrediction = null;
+//             } else {
+//                 // Low confidence detection
+//                 currentPrediction = null;
                 
-                // Clear stability timer if running
-                if (stabilityTimer) {
-                    clearTimeout(stabilityTimer);
-                    stabilityTimer = null;
-                    stabilityStartTime = null;
-                    lastStablePrediction = null;
-                }
+//                 // Clear stability timer if running
+//                 if (stabilityTimer) {
+//                     clearTimeout(stabilityTimer);
+//                     stabilityTimer = null;
+//                     stabilityStartTime = null;
+//                     lastStablePrediction = null;
+//                 }
                 
-                // Clear classification timeout if pending
-                if (classificationTimeout) {
-                    clearTimeout(classificationTimeout);
-                    classificationTimeout = null;
-                }
+//                 // Clear classification timeout if pending
+//                 if (classificationTimeout) {
+//                     clearTimeout(classificationTimeout);
+//                     classificationTimeout = null;
+//                 }
                 
-                // Hide thinking state if showing
-                if (isThinking) {
-                    hideThinkingState();
-                }
-            }
+//                 // Hide thinking state if showing
+//                 if (isThinking) {
+//                     hideThinkingState();
+//                 }
+//             }
             
-        } catch (error) {
-            console.error("Prediction error:", error);
-        }
-    }
+//         } catch (error) {
+//             console.error("Prediction error:", error);
+//         }
+//     }
     
-    // Continue the prediction loop with a small delay to avoid overwhelming the server
-    setTimeout(() => {
-        window.requestAnimationFrame(predictionLoop);
-    }, 100); // 100ms delay between predictions
-}
+//     // Continue the prediction loop with a small delay to avoid overwhelming the server
+//     setTimeout(() => {
+//         window.requestAnimationFrame(predictionLoop);
+//     }, 100); // 100ms delay between predictions
+// }
 
 function showThinkingState() {
     if (isThinking) return;
@@ -357,12 +307,152 @@ document.getElementById('correction-input').addEventListener('keypress', functio
 
 let autoReturnTimer = null;
 
+async function makePrediction() {
+    if (!isModelReady || video.readyState !== 4) return null;
+    
+    try {
+        const imageData = captureFrame();
+        
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: imageData,
+                return_all_predictions: true
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("Full API response:", result); // Debug log
+        
+        if (result.success) {
+            // Update all predictions for dashboard
+            if (result.all_predictions) {
+                allPredictions = { ...result.all_predictions };
+                console.log("Updated allPredictions:", allPredictions);
+                if (isDashboardOpen) {
+                    updateDashboard();
+                }
+            }
+            
+            return {
+                className: result.className,
+                probability: result.probability
+            };
+        } else {
+            console.error('Prediction failed:', result.error);
+            return null;
+        }
+        
+    } catch (error) {
+        console.error('Prediction error:', error);
+        return null;
+    }
+}
+
+async function startManualClassification() {
+    topText.classList.remove('show');
+    backButton.classList.remove('show');
+    yesButton.classList.remove('show');
+    noButton.classList.remove('show');
+    
+    // Show only video with dotted outline
+    dottedOutline.classList.add('show');
+    video.style.display = 'block';
+    const imgElem = document.getElementById('captured-image');
+    imgElem.style.display = 'none';
+    
+    // Update header and byline for countdown
+    document.getElementById('main-title').textContent = "3";
+    document.getElementById('main-title').style.marginTop = '4vh';
+    document.getElementById('byline').textContent = "Hold the item up to the camera";
+    document.getElementById('bottom-text').textContent = '';
+    
+    // Countdown: 3, 2, 1
+    await new Promise(resolve => setTimeout(() => {
+        document.getElementById('main-title').textContent = "2";
+        setTimeout(() => {
+            document.getElementById('main-title').textContent = "1";
+            setTimeout(resolve, 1000);
+        }, 1000);
+    }, 1000));
+    
+    // Hide dotted outline and capture image
+    dottedOutline.classList.remove('show');
+    const imageData = captureFrame();
+    imgElem.src = imageData;
+    imgElem.style.display = 'block';
+    video.style.display = 'none';
+
+    // Show thinking state
+    showThinkingState();
+    
+    // Make prediction with the captured image data
+    try {
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: imageData,
+                return_all_predictions: true
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("Manual classification result:", result);
+        
+        if (result.success) {
+            // Update all predictions for dashboard
+            if (result.all_predictions) {
+                allPredictions = { ...result.all_predictions };
+                console.log("Updated allPredictions from manual:", allPredictions);
+                if (isDashboardOpen) {
+                    updateDashboard();
+                }
+            }
+            
+            currentPrediction = {
+                className: result.className,
+                probability: result.probability
+            };
+        } else {
+            console.error('Manual prediction failed:', result.error);
+            currentPrediction = { className: "UNKNOWN", probability: 0 };
+        }
+        
+    } catch (error) {
+        console.error('Manual prediction error:', error);
+        currentPrediction = { className: "UNKNOWN", probability: 0 };
+    }
+    
+    // Wait for thinking animation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    hideThinkingState();
+    document.getElementById('main-title').style.marginTop = '10vh';
+
+    // Show result
+    showResultState();
+}
+
 function classifyWaste(type) {
     document.getElementById('bottom-text').classList.add('result-state');
     backButton.classList.add('show');
     topText.classList.add('show');
     yesButton.classList.add('show');
     noButton.classList.add('show');
+    dottedOutline.classList.remove('show');
 
     if (autoReturnTimer) {
         clearTimeout(autoReturnTimer);
@@ -394,7 +484,7 @@ function classifyWaste(type) {
         case "PAPER EGG TRAY":
             instruction = "Paper egg trays are made from recycled paper pulp, please place them in the paper bin.";
             break;
-        case "TOILET PAPER OR PAPER TOWEL ROLL":
+        case "TOILET / PAPER TOWEL ROLL":
             instruction = "Toilet paper and paper towel rolls are typically made of cardboard, a paper product, so please place them in the paper bin.";
             break;
         case "MIXED OR OTHER PAPER":
@@ -423,7 +513,7 @@ function classifyWaste(type) {
         case "PLASTIC BEVERAGE BOTTLE":
             instruction = "Plastic beverage bottles are recyclable, please place them in the plastic bin.";
             break;
-        case "SHAMPOO, SOAP, OR DETERGENT BOTTLE":
+        case "TOILETRY / DETERGENT BOTTLE":
             instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
             break;
         case "PLASTIC BAG":
@@ -445,9 +535,9 @@ function classifyWaste(type) {
             instruction = "Melamine products, such as melamine tableware, are not recyclable and should be placed in the waste bin.";
             break;
         case "CREDIT CARD":
-            instruction = "Expired credit cards are not recyclable. Cancel the card, cut it in half, and place it in the waste bin.";
+            instruction = "Credit cards are not recyclable. Cancel the card, cut it in half, and place it in the waste bin.";
             break;
-        case "CONTAMINATED PLASTIC PACKAGING":
+        case "DIRTY PLASTIC PACKAGING":
             instruction = "Anything with food waste, even if just a bit of grease, is not recyclable and should be placed in the waste bin.";
             break;
         case "TOY":
@@ -511,6 +601,7 @@ function classifyWaste(type) {
 
 function resetToHomeScreen() {
     if (!classified) return;
+    document.getElementById('main-title').style.marginTop = '0';
 
     // Clear all timers
     if (stabilityTimer) {
@@ -545,7 +636,7 @@ function resetToHomeScreen() {
     titleContainer.classList.remove('result-state');
     document.getElementById('main-title').textContent = "AI Waste Sorter";
     document.getElementById('byline').textContent = "by Vidacity";
-    document.getElementById('bottom-text').innerHTML = '1. Hold your item up to the camera &nbsp;&nbsp; 2. Wait for classifiction &nbsp;&nbsp; 3. Follow the instructions!';
+    document.getElementById('bottom-text').innerHTML = '1. Press <b>ENTER</b> to start classification &nbsp;&nbsp; 2. Hold the item up to the camera &nbsp;&nbsp; 3. Follow the instructions!';
     
     // Reset confidence text to default
     document.getElementById('confidence-percentage').textContent = "";
@@ -559,6 +650,7 @@ function resetToHomeScreen() {
     }
 
     classified = false;
+    startCamera();
 }
 
 // Dashboard functions
@@ -653,40 +745,38 @@ function updateDashboard() {
 document.addEventListener('keydown', function (e) {
     const correctionStateActive = correctionState.classList.contains('show');
     const inputFocused = document.activeElement === correctionInput;
-    
+
     if (correctionStateActive && inputFocused) {
-        switch (e.key) {
-            case '-':
-            case '_':
-                e.preventDefault(); // Prevent character from being typed
-                document.getElementById('correction-back-button').click();
-                return;
-            case '+':
-            case '=':
-                e.preventDefault(); // Prevent character from being typed
-                submitCorrection();
-                return;
+        if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            document.getElementById('correction-back-button').click();
+            return;
         }
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            submitCorrection();
+            return;
+        }
+    }
+
+    if (e.key === 'Enter' && !classified && !homeContent.classList.contains('hide')) {
+        console.log("Starting manual classification...");
+        e.preventDefault();
+        startManualClassification();
         return;
     }
-    
-    switch (e.key) {
-        case '-':
-        case '_':
-            if (yesButton.classList.contains('show')) {
-                e.preventDefault();
-                yesButton.click();
-            }
-            break;
-        case '+':
-        case '=':
-            if (noButton.classList.contains('show')) {
-                e.preventDefault();
-                noButton.click();
-            }
-            break;
-        case '9':
-            if (backButton.classList.contains('show')) backButton.click();
-            break;
+
+    if ((e.key === '-' || e.key === '_') && yesButton.classList.contains('show')) {
+        e.preventDefault();
+        yesButton.click();
+    }
+
+    if ((e.key === '+' || e.key === '=') && noButton.classList.contains('show')) {
+        e.preventDefault();
+        noButton.click();
+    }
+
+    if (e.key === '9' && backButton.classList.contains('show')) {
+        backButton.click();
     }
 });

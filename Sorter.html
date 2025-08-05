@@ -32,7 +32,8 @@
 
     <span style="border-radius: 2vw; display: flex; flex-direction: column; align-items: center;">
         <video id="camera-view" autoplay muted style="display: none;"></video>
-        <img id="captured-image" style="display:none; width:16vw; border-radius:1.5vw; margin: 0 auto;" alt="Captured item"/>
+        <div class="dotted-outline"></div>
+        <img id="captured-image" style="display:none; width:20vw; border-radius:1.5vw; margin: 0 auto;" alt="Captured item"/>
     </span>
 
     <div class="top-text" id="top-text">
@@ -46,7 +47,7 @@
         </div>
         
         <p class="bottom-text" id="bottom-text">
-            1. Hold your item up to the camera &nbsp;&nbsp; 2. Wait for classifiction &nbsp;&nbsp; 3. Follow the instructions!
+            1. Press <b>ENTER</b> to start classification &nbsp;&nbsp; 2. Hold the item up to the camera &nbsp;&nbsp; 3. Follow the instructions!
         </p>
     </div>
     
@@ -69,10 +70,10 @@
                 <div class="waste-type-list">
                     <div class="waste-type-item"><span class="waste-type-number">1.</span><span class="waste-type-label">CARDBOARD</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">2.</span><span class="waste-type-label">PAPER EGG TRAY</span></div>
-                    <div class="waste-type-item"><span class="waste-type-number">3.</span><span class="waste-type-label">TOILET PAPER OR PAPER TOWEL ROLL</span></div>
+                    <div class="waste-type-item"><span class="waste-type-number">3.</span><span class="waste-type-label">TOILET / PAPER TOWEL ROLL</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">4.</span><span class="waste-type-label">MIXED OR OTHER PAPER</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">5.</span><span class="waste-type-label">PAPER TOWEL OR TISSUE</span></div>
-                    <div class="waste-type-item"><span class="waste-type-number">6.</span><span class="waste-type-label">DISPOSABLE PAPER FOOD PACKAGING</span></div>
+                    <div class="waste-type-item"><span class="waste-type-number">6.</span><span class="waste-type-label">DISPOSABLE FOOD PACKAGING</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">7.</span><span class="waste-type-label">RECEIPT</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">8.</span><span class="waste-type-label">DRINK CARTON</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">9.</span><span class="waste-type-label">GLITTER PAPER</span></div>
@@ -84,7 +85,7 @@
                 <div class="waste-category">PLASTICS</div>
                 <div class="waste-type-list">
                     <div class="waste-type-item"><span class="waste-type-number">11.</span><span class="waste-type-label">PLASTIC BEVERAGE BOTTLE</span></div>
-                    <div class="waste-type-item"><span class="waste-type-number">12.</span><span class="waste-type-label">SHAMPOO, SOAP, OR DETERGENT BOTTLE</span></div>
+                    <div class="waste-type-item"><span class="waste-type-number">12.</span><span class="waste-type-label">TOILETRY / DETERGENT BOTTLE</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">13.</span><span class="waste-type-label">PLASTIC BAG</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">14.</span><span class="waste-type-label">BUBBLE WRAP</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">15.</span><span class="waste-type-label">PLASTIC PACKAGING</span></div>
@@ -92,7 +93,7 @@
                     <div class="waste-type-item"><span class="waste-type-number">17.</span><span class="waste-type-label">PACKAGING WITH FOIL</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">18.</span><span class="waste-type-label">MELAMINE PRODUCT</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">19.</span><span class="waste-type-label">CREDIT CARD</span></div>
-                    <div class="waste-type-item"><span class="waste-type-number">20.</span><span class="waste-type-label">CONTAMINATED PLASTIC PACKAGING</span></div>
+                    <div class="waste-type-item"><span class="waste-type-number">20.</span><span class="waste-type-label">DIRTY PLASTIC PACKAGING</span></div>
                     <div class="waste-type-item"><span class="waste-type-number">21.</span><span class="waste-type-label">TOY</span></div>
                 </div>
             </div>
@@ -124,7 +125,7 @@
         </div>
 
         <div class="input-section">
-            <input type="text" class="correction-input" id="correction-input" placeholder="Enter number (1-32)"/>
+            <input type="text" class="correction-input" id="correction-input" placeholder="Enter number (1-34)"/>
             <div class="correction-button-section">
                 <button class="correction-back-button" id="correction-back-button" onclick="hideCorrectionState()">Back (-)</button>
                 <button class="submit-button" id="submit-button" onclick="submitCorrection()">Submit Correction (+)</button>
@@ -132,11 +133,11 @@
         </div>
     </div>
 
-    <button class="back-button" id="back-button" onclick="resetToHomeScreen()">← <span style="font-size: 1.2vw;"> (9)</span></button>
+    <button class="back-button" id="back-button" onclick="resetToHomeScreen()">← <span style="font-size: 1.2vw;"> PRESS (9) TO RESCAN</span></button>
 
     <div class="button-container">
-        <button class="yes-button" id="yes-button" onclick="resetToHomeScreen()">Yes (-)</button>
-        <button class="no-button" id="no-button" onclick="showCorrectionState()">No (+)</button>
+        <button class="yes-button" id="yes-button" onclick="showCorrectionState()">No (-)</button>
+        <button class="no-button" id="no-button" onclick="resetToHomeScreen()">Yes (+)</button>
     </div>
 </body>
 </html>

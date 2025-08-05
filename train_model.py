@@ -153,7 +153,7 @@ def train():
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'best_val_acc': best_val_acc,
-            }, "model.pt")
+            }, "in_process_model.pt")
             patience_counter = 0
             print(f"  → New best validation accuracy: {best_val_acc:.2%}")
         else:
