@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 class WasteSorterModel:
-    def __init__(self, model_path="model.pt", labels_path="labels.txt"):
+    def __init__(self, model_path="best_model.pt", labels_path="labels.txt"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.labels = self.load_labels(labels_path)
         self.model = self.load_model(model_path)
