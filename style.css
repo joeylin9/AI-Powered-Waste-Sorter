@@ -293,7 +293,7 @@ h1 {
 }
 
 .correction-title {
-    font-size: 2.5vw;
+    font-size: 3vw;
     color: #2a6f97;
     font-weight: 600;
     margin-bottom: 1vh;
@@ -301,10 +301,20 @@ h1 {
 }
 
 .correction-subtitle {
-    font-size: 1.1vw;
+    font-size: 1.4vw;
     color: #666;
     margin-bottom: 3vh;
     text-align: center;
+    margin-bottom: 6vh;
+}
+
+.correction-subtitle.highlight {
+    border-radius: 1.4vw;
+    padding: 1vh 2vw;
+    background: rgba(214, 214, 214, 0.8);
+    width: fit-content;
+    margin: auto;
+    margin-bottom: 2vh;
 }
 
 .correction-button-section {
@@ -374,7 +384,6 @@ h1 {
     align-items: center;
     margin-top: 2vh;
     padding-top: 2vh;
-    border-top: 2px solid #e9ecef;
 }
 
 .category-selection-grid {
@@ -418,23 +427,81 @@ h1 {
     line-height: 1.4;
 }
 
-/* Update the input error styling */
 .correction-input.input-error {
     border-color: #dc3545;
     background-color: #fff5f5;
-    animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
 }
 
 /* Make sure the correction state scrolling works properly */
 .correction-state {
     max-height: 90vh;
     overflow-y: auto;
+}
+
+.circular-bubble-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2vw;
+    justify-items: center;
+    margin: 3vh 0;
+}
+
+.bubble-item {
+    width: 16vw;
+    height: 16vw;
+    border-radius: 50%;
+    border: 3px solid #2a6f97;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1vw;
+    box-shadow: 0 4px 12px rgba(42, 111, 151, 0.1);
+    transition: all 0.2s ease-in-out;
+}
+
+.bubble-item img {
+    width: 50%;
+    height: 50%;
+    border-radius: 20%;
+    object-fit: contain;
+    margin-bottom: 0.5vw;
+}
+
+.bubble-name {
+    font-size: 1vw;
+    font-weight: bold;
+    color: #2a6f97;
+}
+
+.bubble-example {
+    font-size: 0.7vw;
+    color: #666;
+    margin-top: 0.3vw;
+}
+
+.bubble-slider {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+}
+
+.bubble-wrapper {
+    display: flex;
+    transition: transform 0.4s ease;
+    width: 100%;
+}
+
+.circular-bubble-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2vw;
+    width: 100%;
+    padding: 2vh 0;
+    justify-items: center;
+    flex-shrink: 0;
 }
 
 /* Dashboard Styles */

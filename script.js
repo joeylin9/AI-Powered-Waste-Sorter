@@ -32,10 +32,10 @@ const wasteTypes = [
     // PAPER
     "CARDBOARD", // 1
     "PAPER EGG TRAY", // 2
-    "TOILET / PAPER TOWEL ROLL", // 3
+    "PAPER TOWEL ROLL", // 3
     "MIXED OR OTHER PAPER", // 4
     "PAPER TOWEL OR TISSUE", // 5
-    "DISPOSABLE FOOD PACKAGING", // 6
+    "FOOD PACKAGING", // 6
     "RECEIPT", // 7
     "DRINK CARTON", // 8
     "GLITTER PAPER", // 9
@@ -43,7 +43,7 @@ const wasteTypes = [
 
     // PLASTICS
     "PLASTIC BEVERAGE BOTTLE", // 11
-    "TOILETRY / DETERGENT BOTTLE", // 12
+    "SOAP BOTTLE", // 12
     "PLASTIC BAG", // 13
     "BUBBLE WRAP", // 14
     "PLASTIC PACKAGING", // 15
@@ -78,10 +78,10 @@ const wasteCategories = {
         items: [
             "CARDBOARD",
             "PAPER EGG TRAY",
-            "TOILET / PAPER TOWEL ROLL",
+            "PAPER TOWEL ROLL",
             "MIXED OR OTHER PAPER",
             "PAPER TOWEL OR TISSUE",
-            "DISPOSABLE FOOD PACKAGING",
+            "FOOD PACKAGING",
             "RECEIPT",
             "DRINK CARTON",
             "GLITTER PAPER",
@@ -92,7 +92,7 @@ const wasteCategories = {
         number: 2,
         items: [
             "PLASTIC BEVERAGE BOTTLE",
-            "TOILETRY / DETERGENT BOTTLE",
+            "SOAP BOTTLE",
             "PLASTIC BAG",
             "BUBBLE WRAP",
             "PLASTIC PACKAGING",
@@ -242,8 +242,9 @@ function showCategorySelection() {
     const correctionSubtitle = document.querySelector('.correction-subtitle');
     const categoriesContainer = document.querySelector('.categories-container');
     
-    correctionTitle.textContent = "Select the main category";
-    correctionSubtitle.textContent = "Please enter the number corresponding to the main waste category";
+    correctionTitle.textContent = "Select the Material";
+    correctionSubtitle.textContent = "Please enter the number corresponding to the main material category";
+    correctionSubtitle.classList.remove('highlight');
     
     categoriesContainer.innerHTML = `
         <div class="category-selection-grid">
@@ -255,12 +256,12 @@ function showCategorySelection() {
             <div class="main-category-item">
                 <div class="main-category-number">2.</div>
                 <div class="main-category-name">PLASTICS</div>
-                <div class="main-category-description">Bottles, bags, containers, packaging, etc.</div>
+                <div class="main-category-description">Beverage bottles, bubble wrap, chip bags, etc.</div>
             </div>
             <div class="main-category-item">
                 <div class="main-category-number">3.</div>
                 <div class="main-category-name">GLASS</div>
-                <div class="main-category-description">Bottles, jars, drinking glasses, etc.</div>
+                <div class="main-category-description">Jars, drinking glasses, tempered glass etc.</div>
             </div>
             <div class="main-category-item">
                 <div class="main-category-number">4.</div>
@@ -277,58 +278,106 @@ function showCategorySelection() {
     document.getElementById('submit-button').textContent = "Next (+)";
 }
 
+let bubblePage = 0;
+
 function showItemSelection(categoryName) {
     const correctionTitle = document.querySelector('.correction-title');
     const correctionSubtitle = document.querySelector('.correction-subtitle');
     const categoriesContainer = document.querySelector('.categories-container');
-    
-    correctionTitle.textContent = `Select the specific ${categoryName.toLowerCase()} item`;
-    correctionSubtitle.textContent = "Please enter the number corresponding to your specific item";
-    
+
+    correctionTitle.textContent = `Select the Specific Item`;
+    correctionSubtitle.innerHTML = "Press <b>ENTER</b> to cycle through items";
+    correctionSubtitle.classList.add('highlight');
+    correctionInput.value = '';
+
     const category = wasteCategories[categoryName];
-    const itemsHtml = category.items.map((item, index) => `
-        <div class="waste-type-item">
-            <span class="waste-type-number">${index + 1}.</span>
-            <span class="waste-type-label">${item}</span>
+    const itemsPerPage = 4;
+    const totalPages = Math.ceil(category.items.length / itemsPerPage);
+    correctionInput.placeholder = `Enter a number (1-${category.items.length})`;
+
+    // Build all pages of bubble items with numbering
+    const allPages = generateAllPages(category.items, itemsPerPage);
+    let itemNumber = 1;
+    const allPagesHTML = allPages.map(pageItems => `
+        <div class="circular-bubble-grid">
+            ${pageItems.map(item => `
+                <div class="bubble-item">
+                    <img src="images/${item.replace(/ /g, "_").toLowerCase()}.png" alt="${item}" />
+                    <div class="bubble-name">${itemNumber++}. ${item}</div>
+                    <div class="bubble-example">e.g. example here</div>
+                </div>
+            `).join('')}
         </div>
     `).join('');
-    
+
     categoriesContainer.innerHTML = `
-        <div class="category-section">
-            <div class="waste-category">${categoryName}</div>
-            <div class="waste-type-list">
-                ${itemsHtml}
+        <div class="bubble-slider">
+            <div class="bubble-wrapper" style="transform: translateX(0%);">
+                ${allPagesHTML}
             </div>
         </div>
     `;
-    
-    // Update input placeholder
-    correctionInput.placeholder = `Enter number (1-${category.items.length})`;
-    correctionInput.value = '';
-    correctionInput.focus();
-    
-    // Update button text
-    document.getElementById('submit-button').textContent = "Submit Correction (+)";
+
+    // Handle ENTER key to shift to next page
+    document.onkeydown = function(e) {
+        if (correctionStep === 2 && e.key === 'Enter') {
+            e.preventDefault();
+            bubblePage = (bubblePage + 1) % totalPages;
+            const wrapper = document.querySelector('.bubble-wrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translateX(-${bubblePage * 100}%)`;
+            }
+        }
+    };
+}
+
+function generateAllPages(items, itemsPerPage = 4) {
+    const pages = [];
+    for (let i = 0; i < items.length; i += itemsPerPage) {
+        pages.push(items.slice(i, i + itemsPerPage));
+    }
+    return pages;
+}
+
+function generateAllPages(items, itemsPerPage = 4) {
+    const pages = [];
+    for (let i = 0; i < items.length; i += itemsPerPage) {
+        pages.push(items.slice(i, i + itemsPerPage));
+    }
+    return pages;
+}
+
+function correctionBackButtonPress() {
+    if (correctionStep === 1) {
+        // If already at category selection, just hide correction state
+        hideCorrectionState();
+    } else if (correctionStep === 2) {
+        // Go back to category selection
+        correctionStep = 1;
+        showCategorySelection();
+        
+        // Reset input
+        correctionInput.value = '';
+        correctionInput.placeholder = "Enter number (1-4)";
+        correctionInput.focus();
+    }
 }
 
 function hideCorrectionState() {
-    if (correctionStep === 1) {
-        correctionState.classList.remove('show');
-        homeContent.classList.remove('hide');
-        const imgElem = document.getElementById('captured-image');
-        if (imgElem) {
-            imgElem.style.display = 'block';
-        }
-
-        backButton.classList.add('show');
-        yesButton.classList.add('show');
-        noButton.classList.add('show');  
-        topText.classList.add('show');
-
-        selectedCategoryIndex = null;
-    } else {
-        showCorrectionState();
+    correctionInput.classList.remove('input-error');
+    correctionState.classList.remove('show');
+    homeContent.classList.remove('hide');
+    const imgElem = document.getElementById('captured-image');
+    if (imgElem) {
+        imgElem.style.display = 'block';
     }
+
+    backButton.classList.add('show');
+    yesButton.classList.add('show');
+    noButton.classList.add('show');  
+    topText.classList.add('show');
+
+    selectedCategoryIndex = null;
 }
 
 function submitCorrection() {
@@ -338,10 +387,10 @@ function submitCorrection() {
     if (correctionStep === 1) {
         // Category selection step
         if (isNaN(numericInput) || numericInput < 1 || numericInput > 4) {
-            correctionInput.classList.add('input-error');
             correctionInput.value = '';
             correctionInput.placeholder = 'Enter a number 1-4!';
             correctionInput.focus();
+            correctionInput.classList.add('input-error');
             return;
         }
         
@@ -362,13 +411,13 @@ function submitCorrection() {
         const category = wasteCategories[selectedCategory];
         
         if (isNaN(numericInput) || numericInput < 1 || numericInput > category.items.length) {
-            correctionInput.classList.add('input-error');
             correctionInput.value = '';
             correctionInput.placeholder = `Enter a number 1-${category.items.length}!`;
             correctionInput.focus();
+            correctionInput.classList.add('input-error');
             return;
         }
-        
+
         // Get the selected waste type
         const correctedType = category.items[numericInput - 1];
         
@@ -378,6 +427,8 @@ function submitCorrection() {
         hideCorrectionState();
         classifyWaste(correctedType, 1.0);
     }
+
+    correctionInput.classList.remove('input-error');
 }
 
 async function makePrediction() {
@@ -554,7 +605,7 @@ function classifyWaste(type) {
         case "PAPER EGG TRAY":
             instruction = "Paper egg trays are made from recycled paper pulp, please place them in the paper bin.";
             break;
-        case "TOILET / PAPER TOWEL ROLL":
+        case "PAPER TOWEL ROLL":
             instruction = "Toilet paper and paper towel rolls are typically made of cardboard, a paper product, so please place them in the paper bin.";
             break;
         case "MIXED OR OTHER PAPER":
@@ -563,7 +614,7 @@ function classifyWaste(type) {
         case "PAPER TOWEL OR TISSUE":
             instruction = "Paper towels, tissues, and napkins are often used and unclean, and should be placed in the waste bin.";
             break;
-        case "DISPOSABLE FOOD PACKAGING":
+        case "FOOD PACKAGING":
             instruction = "Disposable food and drink paper packaging is often used and unclean, and should be placed in the waste bin.";
             break;
         case "RECEIPT":
@@ -583,7 +634,7 @@ function classifyWaste(type) {
         case "PLASTIC BEVERAGE BOTTLE":
             instruction = "Plastic beverage bottles are recyclable, please place them in the plastic bin.";
             break;
-        case "TOILETRY / DETERGENT BOTTLE":
+        case "SOAP BOTTLE":
             instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
             break;
         case "PLASTIC BAG":
