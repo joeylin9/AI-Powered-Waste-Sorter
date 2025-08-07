@@ -1,1 +1,0 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.10","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2025-07-16T05:58:50.333Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Metal","Paper","Plastic","Glass","Textile","E-Waste","Food Waste","Background"],"imageSize":224}

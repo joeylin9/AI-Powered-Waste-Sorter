@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 class WasteSorterModel:
-    def __init__(self, model_path="best_model.pt", labels_path="labels.txt"):
+    def __init__(self, model_path="model.pt", labels_path="labels.txt"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.labels = self.load_labels(labels_path)
         self.model = self.load_model(model_path)
@@ -157,6 +157,53 @@ def health():
         'device': str(waste_model.device),
         'num_classes': len(waste_model.labels)
     })
+
+@app.route('/save-image', methods=['POST'])
+def save_image():
+    import os, base64
+    from datetime import datetime
+
+    data = request.get_json()
+    image_data = data.get('image')
+    class_name = data.get('className')
+
+    if not image_data or not class_name:
+        return jsonify({"success": False, "error": "Missing data"}), 400
+
+    base_dir = "dataset"
+    class_dir = os.path.join(base_dir, class_name.upper())
+    os.makedirs(class_dir, exist_ok=True)
+
+    counter = 1
+    while True:
+        filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{counter}.png"
+        filepath = os.path.join(class_dir, filename)
+        if not os.path.exists(filepath):
+            break
+        counter += 1
+
+    try:
+        with open(filepath, "wb") as f:
+            f.write(base64.b64decode(image_data))
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    return jsonify({"success": True, "filename": filename})
+
+@app.route('/retrain', methods=['POST'])
+def retrain():
+    import threading
+
+    def background_train():
+        from train_model import train_from_data
+        train_from_data()
+        # Reload the model after training:
+        waste_model.model = waste_model.load_model("model.pt")
+        waste_model.labels = waste_model.load_labels("labels.txt")
+
+    thread = threading.Thread(target=background_train)
+    thread.start()
+    return jsonify({"success": True, "message": "Retraining started in background"})
 
 if __name__ == '__main__':
     print("Starting Waste Sorter API...")

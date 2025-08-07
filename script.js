@@ -15,6 +15,8 @@ let isCountingDown = false;
 
 let correctionStep = 1; // 1 for category selection, 2 for item selection
 let selectedCategoryIndex = null;
+let incorrect = false;
+let imageTicker = 0;
 
 // API endpoint for your PyTorch model
 const API_ENDPOINT = 'http://localhost:5000/predict';
@@ -424,6 +426,9 @@ function submitCorrection() {
         // Update confidence text to show 100% for corrected items
         document.getElementById('confidence-percentage').textContent = "100%";
         
+        incorrect = true;
+        currentPrediction.className = correctedType;
+        console.log("Corrected type:", correctedType);
         hideCorrectionState();
         classifyWaste(correctedType, 1.0);
     }
@@ -752,8 +757,94 @@ function resetToHomeScreen() {
         imgElem.style.display = 'none';
     }
 
+    incorrect = false;
     classified = false;
     startCamera();
+}
+
+function confirmClassification() {
+    const imgElem = document.getElementById('captured-image');
+
+    if (imgElem && imgElem.src && currentPrediction) {
+        const base64Image = imgElem.src.split(',')[1];
+        const className = currentPrediction.className;
+
+        // Send original image to backend to save
+        fetch('http://localhost:5000/save-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: base64Image,
+                className: className
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Image saved as:', data.filename);
+        })
+        .catch(err => {
+            console.error('Error saving image:', err);
+            alert('Failed to save image. Please try again.');
+        });
+
+        // Create a transformed version if incorrect
+        if (incorrect) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            const tempImg = new window.Image();
+            tempImg.onload = function () { // flip image horizontally
+                tempCanvas.width = tempImg.width;
+                tempCanvas.height = tempImg.height;
+                tempCtx.translate(tempCanvas.width, 0);
+                tempCtx.scale(-1, 1);
+                tempCtx.drawImage(tempImg, 0, 0);
+
+                const transformedBase64 = tempCanvas.toDataURL('image/png').split(',')[1];
+
+                // Send transformed image to backend to save
+                fetch('http://localhost:5000/save-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: transformedBase64,
+                        className: className
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Transformed image saved as:', data.filename);
+                })
+                .catch(err => {
+                    console.error('Error saving transformed image:', err);
+                });
+            };
+            tempImg.src = imgElem.src;
+        }
+    }
+
+    if (incorrect) {
+        imageTicker += 3;
+    }
+    else {
+        imageTicker += 1;
+    }
+
+    if (imageTicker >= 15) {
+        // Retrain model on new data
+        fetch('http://localhost:5000/retrain', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+
+        imageTicker = 0;
+    }
+    resetToHomeScreen();
 }
 
 // Dashboard functions

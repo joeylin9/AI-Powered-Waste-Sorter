@@ -1,5 +1,6 @@
 .venv
 model.pt
 best_model.pt
+test_model.pt
 dataset/
 original_dataset/
