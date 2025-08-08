@@ -10,11 +10,7 @@ import shutil
 import os
 import multiprocessing
 
-# Change this to True to train model.pt from scratch using the original dataset
-# Can remove dataset directory and copy original_dataset to dataset to remove all new images
-restart = True
-
-def train(model, train_loader, val_loader, class_names, epochs, learning_rate, device):
+def train(model, train_loader, val_loader, class_names, epochs, learning_rate, device, output_model_path="model_folder/model.pt"):
     """
     Training function that takes a model and data loaders.
     """
@@ -24,8 +20,8 @@ def train(model, train_loader, val_loader, class_names, epochs, learning_rate, d
     optimizer = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, weight_decay=0.01)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3)
 
-    import time, os
-    temp_model_path = f"temp_model_{int(time.time())}.pt"
+    import time
+    temp_model_path = f"model_folder/temp_model_{int(time.time())}.pt"
     best_val_acc = 0.0
     patience_counter = 0
     patience_limit = 7
@@ -95,15 +91,15 @@ def train(model, train_loader, val_loader, class_names, epochs, learning_rate, d
                     param.requires_grad = True
                 optimizer = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate/10, weight_decay=0.01)
 
-    # After training, move temp file to model.pt
+    # After training, move temp file to specified output path
     if os.path.exists(temp_model_path):
-        os.replace(temp_model_path, "model.pt")
-        print(f"Saved final model to model.pt")
+        os.replace(temp_model_path, output_model_path)
+        print(f"Saved final model to {output_model_path}")
     # Clean up temp file if it still exists (shouldn't happen)
     if os.path.exists(temp_model_path):
         os.remove(temp_model_path)
     print(f"\nTraining completed! Best validation accuracy: {best_val_acc:.2%}")
-    Path("labels.txt").write_text("\n".join(class_names))
+    Path("model_folder/labels.txt").write_text("\n".join(class_names))
 
 def get_data_loaders(data_dir, batch_size, image_size=(224, 224)):
     """Prepares and returns train/validation dataloaders."""
@@ -139,14 +135,15 @@ def get_data_loaders(data_dir, batch_size, image_size=(224, 224)):
     train_dataset = Subset(datasets.ImageFolder(data_dir, transform=train_transform), train_indices)
     val_dataset = Subset(datasets.ImageFolder(data_dir, transform=val_transform), val_indices)
 
-    num_workers = 4 if torch.cuda.is_available() else 0
+    # Set num_workers to 0 to avoid multiprocessing issues with Flask
+    num_workers = 0
     pin_memory = torch.cuda.is_available()
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=pin_memory)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
     
     return train_loader, val_loader, class_names
 
-def train_from_data():
+def train_from_data(restart=False, output_model_path="model_folder/model.pt"):
     """Sets up a new model and starts training."""
     # Parameters
     # Make dataset the exact copy as the original dataset
@@ -172,8 +169,12 @@ def train_from_data():
         nn.Dropout(0.3),
         nn.Linear(512, len(class_names))
     )
-    train(model, train_loader, val_loader, class_names, epochs, learning_rate, device)
+    train(model, train_loader, val_loader, class_names, epochs, learning_rate, device, output_model_path)
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    train_from_data()
+
+    # Change this to True to train model.pt from scratch using the original dataset
+    # Can remove dataset directory and copy original_dataset to dataset to remove all new images
+    restart = False
+    train_from_data(restart=restart)

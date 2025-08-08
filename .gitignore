@@ -4,3 +4,4 @@ best_model.pt
 test_model.pt
 dataset/
 original_dataset/
+model_folder/

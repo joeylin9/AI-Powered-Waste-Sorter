@@ -9,12 +9,27 @@ import io
 import base64
 import json
 from pathlib import Path
+import os, base64
+from datetime import datetime
+import threading
+from threading import Lock
+import time
+
+app = Flask(__name__)
+
+# buffer and lock
+pending_images = []
+pending_lock   = Lock()
+
+# Add training lock to prevent model reloading during training
+training_lock = Lock()
+is_training = False
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 class WasteSorterModel:
-    def __init__(self, model_path="model.pt", labels_path="labels.txt"):
+    def __init__(self, model_path="model_folder/model.pt", labels_path="model_folder/labels.txt"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.labels = self.load_labels(labels_path)
         self.model = self.load_model(model_path)
@@ -47,7 +62,7 @@ class WasteSorterModel:
             )
             
             # Load the saved state dict
-            if model_path.endswith('model.pt'):
+            if model_path.endswith('.pt'):
                 # If it's a checkpoint with additional info
                 checkpoint = torch.load(model_path, map_location=self.device)
                 if 'model_state_dict' in checkpoint:
@@ -60,10 +75,10 @@ class WasteSorterModel:
             
             model.to(self.device)
             model.eval()
-            print(f"Model loaded successfully on {self.device}")
+            print(f"Model loaded successfully from {model_path} on {self.device}")
             return model
         except Exception as e:
-            print(f"Error loading model: {e}")
+            print(f"Error loading model from {model_path}: {e}")
             return None
     
     def get_transform(self):
@@ -151,62 +166,162 @@ def predict():
 
 @app.route('/health', methods=['GET'])
 def health():
+    global is_training
     return jsonify({
         'status': 'healthy',
         'model_loaded': waste_model.model is not None,
         'device': str(waste_model.device),
-        'num_classes': len(waste_model.labels)
+        'num_classes': len(waste_model.labels),
+        'is_training': is_training
     })
 
 @app.route('/save-image', methods=['POST'])
 def save_image():
-    import os, base64
-    from datetime import datetime
-
+    global is_training
     data = request.get_json()
     image_data = data.get('image')
     class_name = data.get('className')
+    train_model_flag = False
 
+    # 1) Validate input
     if not image_data or not class_name:
         return jsonify({"success": False, "error": "Missing data"}), 400
 
-    base_dir = "dataset"
-    class_dir = os.path.join(base_dir, class_name.upper())
-    os.makedirs(class_dir, exist_ok=True)
+    # 2) Buffer incoming images
+    with pending_lock:
+        pending_images.append({
+            "image":      image_data,
+            "class_name": class_name.upper()
+        })
+        if len(pending_images) >= 3:
+            to_save = pending_images.copy()
+            pending_images.clear()
+            train_model_flag = True
+        else:
+            to_save = []
 
-    counter = 1
-    while True:
-        filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{counter}.png"
-        filepath = os.path.join(class_dir, filename)
-        if not os.path.exists(filepath):
-            break
-        counter += 1
+    # 3) Persist buffered images to disk
+    saved_files = []
+    for entry in to_save:
+        cls_dir = os.path.join("dataset", entry["class_name"])
+        os.makedirs(cls_dir, exist_ok=True)
 
+        # find a non‐colliding filename
+        counter = 1
+        while True:
+            fn = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{counter}.png"
+            path = os.path.join(cls_dir, fn)
+            if not os.path.exists(path):
+                break
+            counter += 1
+
+        try:
+            with open(path, "wb") as f:
+                f.write(base64.b64decode(entry["image"]))
+            saved_files.append(fn)
+        except Exception as e:
+            app.logger.error(f"Failed to write {fn}: {e}")
+
+    # 4) If we hit the batch size, only start training if none is running
+    start_thread = False
+    if train_model_flag:
+        with training_lock:
+            if not is_training:
+                is_training = True
+                start_thread = True
+
+    if start_thread:
+        thread = threading.Thread(target=background_train)
+        thread.daemon = True
+        thread.start()
+        return jsonify({
+            "success": True,
+            "message": "Retraining started in background with model versioning",
+            "saved_files": saved_files
+        })
+
+    # 5) Otherwise, just acknowledge the save
+    return jsonify({
+        "success": True,
+        "message": "Image saved, waiting for more images to retrain.",
+        "saved_files": saved_files
+    })
+
+@app.route('/reload-model', methods=['POST'])
+def reload_model():
+    """Manual endpoint to reload the model after training"""
+    global waste_model, is_training
+    
+    if is_training:
+        return jsonify({"success": False, "message": "Training in progress"}), 503
+    
     try:
-        with open(filepath, "wb") as f:
-            f.write(base64.b64decode(image_data))
+        # Reload labels and model
+        waste_model.labels = waste_model.load_labels("model_folder/labels.txt")
+        waste_model.model = waste_model.load_model("model_folder/model.pt")
+        
+        if waste_model.model is not None:
+            return jsonify({"success": True, "message": "Model reloaded successfully"})
+        else:
+            return jsonify({"success": False, "message": "Failed to load model"})
+            
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "message": f"Error reloading model: {e}"})
 
-    return jsonify({"success": True, "filename": filename})
-
-@app.route('/retrain', methods=['POST'])
-def retrain():
-    import threading
-
-    def background_train():
+def background_train():
+    """Run retraining in the background, with versioning and atomic swap."""
+    global is_training
+    try:
+        print("Starting background training with model versioning...")
         from train_model import train_from_data
-        train_from_data()
-        # Reload the model after training:
-        waste_model.model = waste_model.load_model("model.pt")
-        waste_model.labels = waste_model.load_labels("labels.txt")
+        import shutil
 
-    thread = threading.Thread(target=background_train)
-    thread.start()
-    return jsonify({"success": True, "message": "Retraining started in background"})
+        # Backup existing model
+        if os.path.exists("model_folder/model.pt"):
+            shutil.copy2("model_folder/model.pt", "model_folder/model_backup.pt")
+            print("Backed up model.pt → model_backup.pt")
+
+        # Train new model
+        print("Training new model → model_new.pt")
+        train_from_data(output_model_path="model_folder/model_new.pt")
+
+        # Give filesystem time, then validate
+        time.sleep(2)
+        if os.path.exists("model_folder/model_new.pt") and os.path.exists("model_folder/labels.txt"):
+            try:
+                torch.load("model_folder/model_new.pt", map_location="cpu")
+                print("New model validated")
+
+                # Swap files
+                if os.path.exists("model_folder/model.pt"):
+                    os.remove("model_folder/model.pt")
+                os.rename("model_folder/model_new.pt", "model_folder/model.pt")
+                print("Model updated atomically")
+
+                # Cleanup backup
+                os.remove("model_folder/model_backup.pt")
+            except Exception as e:
+                print(f"Validation failed: {e}")
+                # restore
+                if os.path.exists("model_folder/model_backup.pt"):
+                    if os.path.exists("model_folder/model_new.pt"):
+                        os.remove("model_folder/model_new.pt")
+                    shutil.copy2("model_folder/model_backup.pt", "model_folder/model.pt")
+                    print("Restored backup model")
+        else:
+            print("Training output missing; skipping swap")
+
+    except Exception as e:
+        print(f"background_train error: {e}")
+        # on error, restore if needed
+        if os.path.exists("model_folder/model_backup.pt") and not os.path.exists("model_folder/model.pt"):
+            shutil.copy2("model_folder/model_backup.pt", "model_folder/model.pt")
+            print("Restored backup after error")
+    finally:
+        with training_lock:
+            is_training = False
+            print("background_train: is_training cleared")
 
 if __name__ == '__main__':
     print("Starting Waste Sorter API...")
-    print(f"Model loaded: {waste_model.model is not None}")
-    print(f"Number of classes: {len(waste_model.labels)}")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True)

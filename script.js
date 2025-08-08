@@ -16,7 +16,6 @@ let isCountingDown = false;
 let correctionStep = 1; // 1 for category selection, 2 for item selection
 let selectedCategoryIndex = null;
 let incorrect = false;
-let imageTicker = 0;
 
 // API endpoint for your PyTorch model
 const API_ENDPOINT = 'http://localhost:5000/predict';
@@ -150,7 +149,11 @@ async function checkBackend() {
             alert("Model not loaded on backend");
         }
     } catch (error) {
-        alert("Backend not available: " + error);
+        console.log('Trying to reconnect to backend');
+        // // refresh page after 5 seconds
+        // setTimeout(() => {
+        //     location.reload();
+        // }, 5000);
     }
 }
 
@@ -277,7 +280,7 @@ function showCategorySelection() {
     correctionInput.placeholder = "Enter number (1-4)";
     
     // Update button text
-    document.getElementById('submit-button').textContent = "Next (+)";
+    document.getElementById('submit-button').textContent = "Confirm (+)";
 }
 
 let bubblePage = 0;
@@ -762,6 +765,7 @@ function resetToHomeScreen() {
     startCamera();
 }
 
+
 function confirmClassification() {
     const imgElem = document.getElementById('captured-image');
 
@@ -825,27 +829,9 @@ function confirmClassification() {
             tempImg.src = imgElem.src;
         }
     }
-
-    if (incorrect) {
-        imageTicker += 3;
-    }
-    else {
-        imageTicker += 1;
-    }
-
-    if (imageTicker >= 15) {
-        // Retrain model on new data
-        fetch('http://localhost:5000/retrain', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-
-        imageTicker = 0;
-    }
     resetToHomeScreen();
 }
+
 
 // Dashboard functions
 function showDashboard() {
@@ -960,14 +946,14 @@ document.addEventListener('keydown', function (e) {
         return;
     }
 
-    if ((e.key === '-' || e.key === '_') && yesButton.classList.contains('show')) {
-        e.preventDefault();
-        yesButton.click();
-    }
-
-    if ((e.key === '+' || e.key === '=') && noButton.classList.contains('show')) {
+    if ((e.key === '-' || e.key === '_') && noButton.classList.contains('show')) {
         e.preventDefault();
         noButton.click();
+    }
+
+    if ((e.key === '+' || e.key === '=') && yesButton.classList.contains('show')) {
+        e.preventDefault();
+        yesButton.click();
     }
 
     if (e.key === '9' && backButton.classList.contains('show')) {
