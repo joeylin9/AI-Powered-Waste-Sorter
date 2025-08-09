@@ -225,7 +225,7 @@ def save_image():
             "image":      image_data,
             "class_name": class_name.upper()
         })
-        if len(pending_images) >= 3:
+        if len(pending_images) >= 15:
             to_save = pending_images.copy()
             pending_images.clear()
             train_model_flag = True

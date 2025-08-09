@@ -9,6 +9,8 @@ const yesButton = document.getElementById('yes-button');
 const noButton = document.getElementById('no-button');
 const backButton = document.getElementById('back-button');
 const dottedOutline = document.querySelector('.dotted-outline');
+let toastContainer = document.getElementById('toast-container');
+let toast = document.querySelector('#toast-container .toast');
 let classified = false;
 let isThinking = false;
 let isCountingDown = false;
@@ -787,10 +789,13 @@ function confirmClassification() {
         .then(res => res.json())
         .then(data => {
             console.log('Image saved as:', data.filename);
+            // Show success toast notification
+            showToast('Feedback received!');
         })
         .catch(err => {
             console.error('Error saving image:', err);
-            alert('Failed to save image. Please try again.');
+            // Show error toast
+            showToast('Failed to save feedback', 'error');
         });
 
         // Create a transformed version if incorrect
@@ -832,6 +837,21 @@ function confirmClassification() {
     resetToHomeScreen();
 }
 
+function showToast(message, type = 'success') {
+    // Update the message and type
+    toast.className = `toast ${type}`;
+    toast.querySelector('.toast-message').textContent = message;
+
+    // Show the toast
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    // Hide the toast after a delay
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
+}
 
 // Dashboard functions
 function showDashboard() {

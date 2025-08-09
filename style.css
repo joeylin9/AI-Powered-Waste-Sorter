@@ -323,6 +323,48 @@ h1 {
     gap: 1.5vw;
 }
 
+#toast-container {
+    position: fixed;
+    top: 2vh;
+    right: 2vh;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: #4CAF50;
+    color: white;
+    padding: 1.5vh 1.5vw;
+    border-radius: 3vw;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.3s ease;
+}
+
+.toast.error {
+    background: #F44336;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-icon {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.toast-message {
+    font-size: 1vw;
+    font-weight: 500;
+}
+
 .categories-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
