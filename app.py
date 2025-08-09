@@ -31,6 +31,8 @@ CORS(app)  # Enable CORS for all routes
 class WasteSorterModel:
     def __init__(self, model_path="model_folder/model.pt", labels_path="model_folder/labels.txt"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model_path = model_path  # Store paths for reloading
+        self.labels_path = labels_path
         self.labels = self.load_labels(labels_path)
         self.model = self.load_model(model_path)
         self.transform = self.get_transform()
@@ -80,6 +82,36 @@ class WasteSorterModel:
         except Exception as e:
             print(f"Error loading model from {model_path}: {e}")
             return None
+    
+    def reload_model(self):
+        """Reload both labels and model from disk"""
+        try:
+            print("Reloading labels and model from disk...")
+            
+            # Reload labels first (model architecture depends on number of classes)
+            old_labels_count = len(self.labels)
+            self.labels = self.load_labels(self.labels_path)
+            new_labels_count = len(self.labels)
+            
+            # Clear GPU memory of old model
+            if self.model is not None:
+                del self.model
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            
+            # Load new model
+            self.model = self.load_model(self.model_path)
+            
+            if self.model is not None:
+                print(f"Model successfully reloaded! Classes: {old_labels_count} -> {new_labels_count}")
+                return True
+            else:
+                print("Failed to reload model")
+                return False
+                
+        except Exception as e:
+            print(f"Error during model reload: {e}")
+            return False
     
     def get_transform(self):
         """Get the same transform used during validation"""
@@ -256,11 +288,9 @@ def reload_model():
         return jsonify({"success": False, "message": "Training in progress"}), 503
     
     try:
-        # Reload labels and model
-        waste_model.labels = waste_model.load_labels("model_folder/labels.txt")
-        waste_model.model = waste_model.load_model("model_folder/model.pt")
+        success = waste_model.reload_model()
         
-        if waste_model.model is not None:
+        if success:
             return jsonify({"success": True, "message": "Model reloaded successfully"})
         else:
             return jsonify({"success": False, "message": "Failed to load model"})
@@ -270,7 +300,7 @@ def reload_model():
 
 def background_train():
     """Run retraining in the background, with versioning and atomic swap."""
-    global is_training
+    global is_training, waste_model
     try:
         print("Starting background training with model versioning...")
         from train_model import train_from_data
@@ -289,20 +319,38 @@ def background_train():
         time.sleep(2)
         if os.path.exists("model_folder/model_new.pt") and os.path.exists("model_folder/labels.txt"):
             try:
+                # Validate the new model can be loaded
                 torch.load("model_folder/model_new.pt", map_location="cpu")
                 print("New model validated")
 
-                # Swap files
+                # Swap files atomically
                 if os.path.exists("model_folder/model.pt"):
                     os.remove("model_folder/model.pt")
                 os.rename("model_folder/model_new.pt", "model_folder/model.pt")
                 print("Model updated atomically")
 
-                # Cleanup backup
-                os.remove("model_folder/model_backup.pt")
+                # Reload the model in memory - this is the key fix!
+                print("Reloading model in memory...")
+                success = waste_model.reload_model()
+                
+                if success:
+                    print("Model successfully reloaded in memory - server will use new model")
+                else:
+                    print("Failed to reload model in memory")
+                    # Restore backup if reload failed
+                    if os.path.exists("model_folder/model_backup.pt"):
+                        shutil.copy2("model_folder/model_backup.pt", "model_folder/model.pt")
+                        print("Restored backup model due to reload failure")
+                        return
+
+                # Cleanup backup only if everything succeeded
+                if os.path.exists("model_folder/model_backup.pt"):
+                    os.remove("model_folder/model_backup.pt")
+                    print("Cleaned up backup file")
+
             except Exception as e:
                 print(f"Validation failed: {e}")
-                # restore
+                # Restore backup
                 if os.path.exists("model_folder/model_backup.pt"):
                     if os.path.exists("model_folder/model_new.pt"):
                         os.remove("model_folder/model_new.pt")
@@ -313,7 +361,7 @@ def background_train():
 
     except Exception as e:
         print(f"background_train error: {e}")
-        # on error, restore if needed
+        # On error, restore if needed
         if os.path.exists("model_folder/model_backup.pt") and not os.path.exists("model_folder/model.pt"):
             shutil.copy2("model_folder/model_backup.pt", "model_folder/model.pt")
             print("Restored backup after error")
@@ -324,4 +372,6 @@ def background_train():
 
 if __name__ == '__main__':
     print("Starting Waste Sorter API...")
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True)
+    print(f"Model loaded: {waste_model.model is not None}")
+    print(f"Number of classes: {len(waste_model.labels)}")
+    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
