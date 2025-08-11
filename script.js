@@ -30,81 +30,39 @@ let items_counter = 0;
 let allPredictions = {};
 let isDashboardOpen = false;
 
-// Waste type categories for dashboard
-const wasteTypes = [
-    // PAPER
-    "CARDBOARD", // 1
-    "PAPER EGG TRAY", // 2
-    "PAPER TOWEL ROLL", // 3
-    "MIXED OR OTHER PAPER", // 4
-    "PAPER TOWEL OR TISSUE", // 5
-    "FOOD PACKAGING", // 6
-    "RECEIPT", // 7
-    "DRINK CARTON", // 8
-    "GLITTER PAPER", // 9
-    "CRAYON DRAWING", // 10
-
-    // PLASTICS
-    "PLASTIC BEVERAGE BOTTLE", // 11
-    "SOAP BOTTLE", // 12
-    "PLASTIC BAG", // 13
-    "BUBBLE WRAP", // 14
-    "PLASTIC PACKAGING", // 15
-    "REUSABLE PLASTIC CONTAINER", // 16
-    "PACKAGING WITH FOIL", // 17
-    "MELAMINE PRODUCT", // 18
-    "CREDIT CARD", // 19
-    "DIRTY PLASTIC PACKAGING", // 20
-    "TOY", // 21
-
-    // GLASS
-    "GLASS BOTTLE OR JAR", // 22
-    "DRINKING OR WINE GLASS", // 23
-    "GLASSWARE CONTAINER", // 24
-    "TEMPERED GLASS", // 25
-    "MIRROR", // 26
-    "GLASS WITH METAL WIRES", // 27
-    "LIGHT BULB", // 28
-
-    // OTHER
-    "PLANT", // 29
-    "WOOD", // 30
-    "DIAPER", // 31
-    "STYROFOAM", // 32
-    "PORCELAIN OR CERAMIC", // 33
-    "OTHER" // 34
-];
-
 const wasteCategories = {
     "PAPER": {
         number: 1,
         items: [
             "CARDBOARD",
             "PAPER EGG TRAY",
-            "PAPER TOWEL ROLL",
-            "MIXED OR OTHER PAPER",
             "PAPER TOWEL OR TISSUE",
-            "FOOD PACKAGING",
+            "SCRAP PAPER",
+            "PRINT MEDIA",
             "RECEIPT",
-            "DRINK CARTON",
+            "ENVELOPE",
             "GLITTER PAPER",
-            "CRAYON DRAWING"
+            "CRAYON DRAWING",
+            "OTHER PAPER"
         ]
     },
     "PLASTICS": {
         number: 2,
         items: [
-            "PLASTIC BEVERAGE BOTTLE",
-            "SOAP BOTTLE",
-            "PLASTIC BAG",
-            "BUBBLE WRAP",
-            "PLASTIC PACKAGING",
-            "REUSABLE PLASTIC CONTAINER",
+            "CLEAN PLASTIC PACKAGING",
+            "DIRTY PLASTIC PACKAGING",
+            "DISPOSABLE FOOD PACKAGING",
+            "DRINK CARTON",
             "PACKAGING WITH FOIL",
+            "PLASTIC BAG",
+            "PLASTIC BEVERAGE BOTTLE",
+            "REUSABLE PLASTIC CONTAINER",
+            "SOAP BOTTLE",
+            "BUBBLE WRAP",
             "MELAMINE PRODUCT",
             "CREDIT CARD",
-            "DIRTY PLASTIC PACKAGING",
-            "TOY"
+            "TOY",
+            "OTHER PLASTIC"
         ]
     },
     "GLASS": {
@@ -116,25 +74,43 @@ const wasteCategories = {
             "TEMPERED GLASS",
             "MIRROR",
             "GLASS WITH METAL WIRES",
-            "LIGHT BULB"
+            "LIGHT BULB",
+            "OTHER GLASS"
+        ]
+    },
+    "METAL": {
+        number: 4,
+        items: [
+            "BATTERY OR POWER BANK",
+            "OTHER ELECTRONIC",
+            "DIRTY OR RUSTY METAL",
+            "METAL CAN OR BOTTLE",
+            "METAL CONTAINER OR PACKAGING",
+            "METAL UTENSIL",
+            "METAL ACCESSORY",
+            "MEDAL",
+            "OTHER METAL"
         ]
     },
     "OTHER": {
-        number: 4,
+        number: 5,
         items: [
+            "CLOTHING OR TEXTILE",
             "PLANT",
             "WOOD",
             "DIAPER",
-            "STYROFOAM",
             "PORCELAIN OR CERAMIC",
+            "STYROFOAM",
             "OTHER"
         ]
     }
 };
 
 // Initialize predictions object
-wasteTypes.forEach(type => {
-    allPredictions[type] = 0;
+Object.values(wasteCategories).forEach(category => {
+    category.items.forEach(type => {
+        allPredictions[type] = 0;
+    });
 });
 
 // Check if backend is ready
@@ -272,8 +248,13 @@ function showCategorySelection() {
             </div>
             <div class="main-category-item">
                 <div class="main-category-number">4.</div>
+                <div class="main-category-name">METAL</div>
+                <div class="main-category-description">Electronics, cans, metal containers, etc.</div>
+            </div>
+            <div class="main-category-item">
+                <div class="main-category-number">5.</div>
                 <div class="main-category-name">OTHER</div>
-                <div class="main-category-description">Wood, plants, ceramics, styrofoam, etc.</div>
+                <div class="main-category-description">Clothing, wood, ceramics, styrofoam, etc.</div>
             </div>
         </div>
     `;
@@ -608,115 +589,172 @@ function classifyWaste(type) {
 
     let instruction = "";
     switch (type) {
-        // PAPERS
+        // ========================
+        // PAPER
+        // ========================
         case "CARDBOARD":
-            instruction = "Cardboard is a paper product, please place it in the paper bin.";
+            instruction = "Cardboard boxes are recyclable. Flatten them and place in the paper bin.";
             break;
         case "PAPER EGG TRAY":
-            instruction = "Paper egg trays are made from recycled paper pulp, please place them in the paper bin.";
-            break;
-        case "PAPER TOWEL ROLL":
-            instruction = "Toilet paper and paper towel rolls are typically made of cardboard, a paper product, so please place them in the paper bin.";
-            break;
-        case "MIXED OR OTHER PAPER":
-            instruction = "Paper products can be placed in the paper bin.";
+            instruction = "Paper egg trays are made from recycled pulp and can go into the paper bin.";
             break;
         case "PAPER TOWEL OR TISSUE":
-            instruction = "Paper towels, tissues, and napkins are often used and unclean, and should be placed in the waste bin.";
-            break;
-        case "FOOD PACKAGING":
-            instruction = "Disposable food and drink paper packaging is often used and unclean, and should be placed in the waste bin.";
-            break;
-        case "RECEIPT":
-            instruction = "There are different types of receipts (e.g. paper and thermal), but all are okay for the blue bins. Please place it in the paper bin.";
+            instruction = "Paper towels or tissues are often dirty. Place in waste bin.";
             break;
         case "DRINK CARTON":
-            instruction = "Drink cartons are made of paper and has a waterproof lining, but can still be recycled. Please place it in the paper bin.";
+            instruction = "Empty and rinse drink cartons before placing in paper bin.";
+            break;
+        case "SCRAP PAPER":
+            instruction = "Clean scrap paper can be recycled. Place in the paper bin.";
+            break;
+        case "PRINT MEDIA":
+            instruction = "Magazines, newspapers, and books can be placed in the paper bin.";
+            break;
+        case "RECEIPT":
+            instruction = "ALl types of receipts (paper, thermal, etc.) can be recycled in the paper bin.";
+            break;
+        case "ENVELOPE":
+            instruction = "Envelopes with or without plastic windows can be recycled. Place in paper bin.";
             break;
         case "GLITTER PAPER":
-            instruction = "Glitter paper is not practical to recycle as it is very difficult to separate the non-paper layer. Please place it in the waste bin.";
+            instruction = "Glitter paper is not recyclable due to the non-paper layer. Place it in the waste bin.";
             break;
         case "CRAYON DRAWING":
-            instruction = "Crayon wax prevents water from breaking down paper, so it can't be recycled. Please place it in the waste bin.";
+            instruction = "Crayon wax is not recyclable because the wax prevents water from breaking down paper. Place it in the waste bin.";
             break;
-        
-        // PLASTICS
-        case "PLASTIC BEVERAGE BOTTLE":
-            instruction = "Plastic beverage bottles are recyclable, please place them in the plastic bin.";
-            break;
-        case "SOAP BOTTLE":
-            instruction = "Shampoo, soap, detergent, and other similar bottles are recyclable, please place them in the plastic bin.";
-            break;
-        case "PLASTIC BAG":
-            instruction = "Plastic bags are recyclable, please place them in the plastic bin.";
-            break;
-        case "BUBBLE WRAP":
-            instruction = "Bubble wrap is recyclable, please place them in the plastic bin.";
-            break;
-        case "PLASTIC PACKAGING":
-            instruction = "These items are recyclable, please place them in the plastic bin.";
-            break;
-        case "REUSABLE PLASTIC CONTAINER":
-            instruction = "Reusable food storage containers, such as Tupperware, are recyclable, please place them in the plastic bin.";
-            break;
-        case "PACKAGING WITH FOIL":
-            instruction = "It is difficult to separate the foil from plastic, so it is not recyclable. Please place it in the waste bin.";
-            break;
-        case "MELAMINE PRODUCT":
-            instruction = "Melamine products, such as melamine tableware, are not recyclable and should be placed in the waste bin.";
-            break;
-        case "CREDIT CARD":
-            instruction = "Credit cards are not recyclable. Cancel the card, cut it in half, and place it in the waste bin.";
-            break;
-        case "DIRTY PLASTIC PACKAGING":
-            instruction = "Anything with food waste, even if just a bit of grease, is not recyclable and should be placed in the waste bin.";
-            break;
-        case "TOY":
-            instruction = "Toys should be donated if in good condition, else, because they are made of mixed materials, place in the waste bin.";
+        case "OTHER PAPER":
+            instruction = "Clean paper products can typically be recycled, but check local guidelines first.";
             break;
 
+        // ========================
+        // PLASTICS
+        // ========================
+        case "CLEAN PLASTIC PACKAGING":
+            instruction = "Clean plastic packaging can be recycled. Place in the plastic bin.";
+            break;
+        case "DIRTY PLASTIC PACKAGING":
+            instruction = "Plastic contaminated with food/oil should go in the waste bin.";
+            break;
+        case "DISPOSABLE FOOD PACKAGING":
+            instruction = "If clean, can be recycled. If greasy/dirty, place in waste bin.";
+            break;
+        case "PACKAGING WITH FOIL":
+            instruction = "Plastic with foil lining (e.g., chip bags) cannot be recycled. Place in waste bin.";
+            break;
+        case "PLASTIC BAG":
+            instruction = "Plastic bags can be recycled. Place in plastic bin.";
+            break;
+        case "PLASTIC BEVERAGE BOTTLE":
+            instruction = "Empty and rinse plastic bottles before recycling.";
+            break;
+        case "REUSABLE PLASTIC CONTAINER":
+            instruction = "Reuse! Else, empty, rinse, and recycle in plastic bin.";
+            break;
+        case "SOAP BOTTLE":
+            instruction = "Empty and rinse before recycling in plastic bin.";
+            break;
+        case "BUBBLE WRAP":
+            instruction = "Bubble wrap is recyclable. Place in plastic bin.";
+            break;
+        case "MELAMINE PRODUCT":
+            instruction = "Melamine tableware is not recyclable. Place in waste bin.";
+            break;
+        case "CREDIT CARD":
+            instruction = "Credit cards should be cut and placed in waste bin.";
+            break;
+        case "TOY":
+            instruction = "Donate if in good condition. Otherwise, place in waste bin.";
+            break;
+        case "OTHER PLASTIC":
+            instruction = "Typically, clean plastics are recyclable, but check local guidelines first.";
+            break;
+
+        // ========================
         // GLASS
+        // ========================
         case "GLASS BOTTLE OR JAR":
-            instruction = "Glass bottles and jars are recyclable, please place them carefully in the glass bin.";
+            instruction = "Empty and rinse glass bottles/jars before placing in the glass bin.";
             break;
         case "DRINKING OR WINE GLASS":
-            instruction = "Drinking and wine glasses are recyclable, please place them carefully in the glass bin.";
+            instruction = "Drinkware can be recycled if clean. Place in glass bin.";
             break;
         case "GLASSWARE CONTAINER":
-            instruction = "Glassware containers, such as Pyrex and oven-safe containers, are often used and unclean, and should be placed carefully in the waste bin.";
+            instruction = "Oven-safe and Pyrex glassware are often unclean and cannot be recycled. Reuse or place in waste bin.";
             break;
         case "TEMPERED GLASS":
-            instruction = "Tempered glass has a different chemical composition compared to regular glass, making it unrecyclable. It should be placed carefully in the waste bin.";
+            instruction = "Tempered glass is not recyclable. Place in waste bin.";
             break;
         case "MIRROR":
-            instruction = "Mirrors are not recyclable because of the coatings on the glass that make it reflective. They should be placed carefully in the waste bin.";
+            instruction = "Mirrors are not recyclable due to the reflective coating. Place in waste bin.";
             break;
         case "GLASS WITH METAL WIRES":
-            instruction = "Glass with metal wires is difficult to process so it is not recyclable. It should be placed carefully in the waste bin.";
+            instruction = "Not recyclable. Place in waste bin.";
             break;
         case "LIGHT BULB":
-            instruction = "Light bulbs should be placed in the E-waste bin.";
+            instruction = "Dispose at an e-waste collection point.";
             break;
-            
+        case "OTHER GLASS":
+            instruction = "Clean and standard glass can typically be recyled, but check with local guidelines first.";
+            break;
+
+        // ========================
+        // METAL
+        // ========================
+        case "BATTERY OR POWER BANK":
+            instruction = "Dispose at an e-waste collection point.";
+            break;
+        case "OTHER ELECTRONIC":
+            instruction = "Recycle at an e-waste collection point.";
+            break;
+        case "DIRTY OR RUSTY METAL":
+            instruction = "Heavily rusted or dirty metal should go in the waste bin.";
+            break;
+        case "METAL CAN OR BOTTLE":
+            instruction = "Empty, rinse, and place clean metal cans/bottles in the metal bin.";
+            break;
+        case "METAL CONTAINER OR PACKAGING":
+            instruction = "Empty, rinse, and place clean containers in the metal bin.";
+            break;
+        case "METAL UTENSIL":
+            instruction = "Recycle if completely metal. Otherwise, dispose as waste.";
+            break;
+        case "METAL ACCESSORY":
+            instruction = "Small metal accessories can be recycled, place in the metal bin.";
+            break;
+        case "MEDAL":
+            instruction = "Metal medals can be placed in the metal bin after removing any non-metal components.";
+            break;
+        case "OTHER METAL":
+            instruction = "Typically, clean and fully metal items are recyclable, but check local guidelines first.";
+            break;
+
+        // ========================
         // OTHER
+        // ========================
+        case "CLOTHING OR TEXTILE":
+            instruction = "Donate if in good condition. Otherwise, place in waste bin.";
+            break;
         case "PLANT":
-            instruction = "Plants are not recyclable and should be placed in the waste bin.";
+            instruction = "Plant waste should be composted or placed in waste bin.";
             break;
         case "WOOD":
-            instruction = "Wood is not recyclable and should be placed in the waste bin.";
+            instruction = "Wood is not recyclable. Place in waste bin.";
             break;
         case "DIAPER":
-            instruction = "Diapers, even if clean, are not recyclable and should be placed in the waste bin.";
-            break;
-        case "STYROFOAM":
-            instruction = "Styrofoam is not recyclable and should be placed in the waste bin.";
+            instruction = "Diapers are not recyclable. Place in waste bin.";
             break;
         case "PORCELAIN OR CERAMIC":
-            instruction = "Porcelain and ceramics are not recyclable and should be placed in the waste bin.";
+            instruction = "Porcelain or ceramic is not recyclable. Place in waste bin.";
+            break;
+        case "STYROFOAM":
+            instruction = "Styrofoam products are not recyclable. Place in waste bin.";
+            break;
+        case "OTHER":
+            instruction = "Check local guidelines for disposal or recycling.";
             break;
 
         default:
-            instruction = "Please check with local waste management for proper disposal. Recyclopedia.sg is a good resource!";
+            instruction = "Please check with local waste management for proper disposal.";
     }
 
     // Change display to result state
@@ -870,24 +908,28 @@ function initializeDashboard() {
     const grid = document.getElementById('predictions-grid');
     grid.innerHTML = '';
     
-    wasteTypes.forEach((type, index) => {
-        const item = document.createElement('div');
-        item.className = 'prediction-item';
-        item.id = `prediction-${index}`;
-        
-        const displayName = type.replace(/_/g, ' / ');
-        
-        item.innerHTML = `
-            <div class="prediction-label">
-                <span>${displayName}</span>
-                <span class="prediction-value" id="value-${index}">0%</span>
-            </div>
-            <div class="prediction-bar-container">
-                <div class="prediction-bar" id="bar-${index}" style="width: 0%"></div>
-            </div>
-        `;
-        
-        grid.appendChild(item);
+    let index = 0;
+    Object.values(wasteCategories).forEach(category => {
+        category.items.forEach(type => {
+            const item = document.createElement('div');
+            item.className = 'prediction-item';
+            item.id = `prediction-${index}`;
+            
+            const displayName = type.replace(/_/g, ' / ');
+            
+            item.innerHTML = `
+                <div class="prediction-label">
+                    <span>${displayName}</span>
+                    <span class="prediction-value" id="value-${index}">0%</span>
+                </div>
+                <div class="prediction-bar-container">
+                    <div class="prediction-bar" id="bar-${index}" style="width: 0%"></div>
+                </div>
+            `;
+            
+            grid.appendChild(item);
+            index++;
+        });
     });
     
     updateDashboard();
@@ -915,30 +957,34 @@ function updateDashboard() {
     `).join('');
     
     // Update all prediction bars
-    wasteTypes.forEach((type, index) => {
-        const confidence = allPredictions[type] || 0;
-        const percentage = Math.round(confidence * 100);
-        
-        const valueElement = document.getElementById(`value-${index}`);
-        const barElement = document.getElementById(`bar-${index}`);
-        const itemElement = document.getElementById(`prediction-${index}`);
-        
-        if (valueElement && barElement && itemElement) {
-            valueElement.textContent = `${percentage}%`;
-            barElement.style.width = `${percentage}%`;
+    let index = 0;
+    Object.values(wasteCategories).forEach(category => {
+        category.items.forEach(type => {
+            const confidence = allPredictions[type] || 0;
+            const percentage = Math.round(confidence * 100);
             
-            // Update bar color based on confidence
-            barElement.classList.remove('high-confidence', 'medium-confidence');
-            if (confidence > 0.7) {
-                barElement.classList.add('high-confidence');
-                itemElement.classList.add('active');
-            } else if (confidence > 0.3) {
-                barElement.classList.add('medium-confidence');
-                itemElement.classList.remove('active');
-            } else {
-                itemElement.classList.remove('active');
+            const valueElement = document.getElementById(`value-${index}`);
+            const barElement = document.getElementById(`bar-${index}`);
+            const itemElement = document.getElementById(`prediction-${index}`);
+            
+            if (valueElement && barElement && itemElement) {
+                valueElement.textContent = `${percentage}%`;
+                barElement.style.width = `${percentage}%`;
+                
+                // Update bar color based on confidence
+                barElement.classList.remove('high-confidence', 'medium-confidence');
+                if (confidence > 0.7) {
+                    barElement.classList.add('high-confidence');
+                    itemElement.classList.add('active');
+                } else if (confidence > 0.3) {
+                    barElement.classList.add('medium-confidence');
+                    itemElement.classList.remove('active');
+                } else {
+                    itemElement.classList.remove('active');
+                }
             }
-        }
+            index++;
+        });
     });
 }
 

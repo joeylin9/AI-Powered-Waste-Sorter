@@ -150,7 +150,7 @@ def train_from_data(restart=False, output_model_path="model_folder/model.pt"):
     if restart:
         data_dir = "original_dataset"
     else:
-        data_dir = "dataset"
+        data_dir = "original_dataset"
     batch_size = 16
     epochs = 25
     learning_rate = 0.0001
