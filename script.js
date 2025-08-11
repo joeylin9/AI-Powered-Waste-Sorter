@@ -291,8 +291,10 @@ function showItemSelection(categoryName) {
             ${pageItems.map(item => `
                 <div class="bubble-item">
                     <img src="images/${item.replace(/ /g, "_").toLowerCase()}.png" alt="${item}" />
-                    <div class="bubble-name">${itemNumber++}. ${item}</div>
-                    <div class="bubble-example">e.g. example here</div>
+                    <div class="bubble-name">
+                        <div>${itemNumber++}.</div>
+                        <div class="bubble-name-item">${item}</div>
+                    </div>
                 </div>
             `).join('')}
         </div>
@@ -374,9 +376,9 @@ function submitCorrection() {
     
     if (correctionStep === 1) {
         // Category selection step
-        if (isNaN(numericInput) || numericInput < 1 || numericInput > 4) {
+        if (isNaN(numericInput) || numericInput < 1 || numericInput > 5) {
             correctionInput.value = '';
-            correctionInput.placeholder = 'Enter a number 1-4!';
+            correctionInput.placeholder = 'Enter a number 1-5!';
             correctionInput.focus();
             correctionInput.classList.add('input-error');
             return;

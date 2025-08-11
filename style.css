@@ -516,12 +516,9 @@ h1 {
     font-size: 1vw;
     font-weight: bold;
     color: #2a6f97;
-}
-
-.bubble-example {
-    font-size: 0.7vw;
-    color: #666;
-    margin-top: 0.3vw;
+    margin-top: 2vh;
+    text-align: center;
+    max-width: 10vw;
 }
 
 .bubble-slider {
